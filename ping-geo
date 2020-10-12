@@ -9,23 +9,79 @@ import signal
 
 gvars = {}
 
-def ui_renderer():
+def ui_print(term, data):
+    # get it every time, so that we react if the terminal changes (ie. if it gets resized)
+    t_height = term.height
+    t_width = term.width
+
+    term_size_changed = False
+    if 'ui_old_size' not in gvars \
+      or t_height != gvars['ui_old_size']['height'] or t_width != gvars['ui_old_size']['width']:
+        #
+        term_size_changed = True
+        gvars['ui_old_size'] = {
+            'height': t_height,
+            'width': t_width,
+        }
+
+    if term_size_changed:
+        print(term.clear(), end='', flush=True)
+        if 'ui_old_screen' in gvars:
+            del gvars['ui_old_screen']
+
+    if 'ui_old_screen' not in gvars:
+        gvars['ui_old_screen'] = {}
+    old_screen = gvars['ui_old_screen']
+
+    screen_changed = False
+    for i in range(0, t_height):
+        if i not in old_screen: # first initialization of "old_screen"
+            old_screen[i] = None
+
+        data_row = data[i]
+
+        if not isinstance(data_row, str):
+            raise ValueError(f'Screen data row with index {i} is not "str"')
+
+        for c in ['\n', '\r', '\t']:
+            if c in data_row:
+                raise ValueError(f'Data lines cannot contain ASCII character {ord(c)}: {data_row}')
+
+        if len(data_row) > t_width:
+            cut_suffix = ' ...'
+            data_row = data_row[:-len(cut_suffix)] + cut_suffix
+            if len(data_row) > t_width: # if the terminal is really narrow
+                data_row = data_row[0:t_width]
+
+        if data_row != old_screen[i]: # this could be optimized to draw only a part of the line
+            old_screen[i] = data_row
+            screen_changed = True
+            print(term.move(i, 0) + data_row, end='', flush=False)
+
+    if screen_changed:
+        sys.stdout.flush()
+
+def ui_renderer(all_hosts):
     term = gvars['term']
 
     with gvars['exit_fullscreen_lock']:
         gvars['exited_fullscreen'] = False
         print(gvars['term'].enter_fullscreen())
 
-    while not gvars['stop_run']:
-        print(term.clear())
-        print('Term height: {}'.format(term.height))
-        print('Term width : {}'.format(term.width))
+    s_idx = 15
+    with gvars['term'].hidden_cursor():
+        while not gvars['stop_run']:
+            pdata = []
 
-        print(term.bold('Hi there!'))
-        with term.location(0, term.height - 1 + 2):
-            print('This is at the bottom.\naa', end='', flush=True)
+            pdata.append('Menu...')
+            pdata.append('')
 
-        time.sleep(0.05)
+            max_host_len = 16
+            for host in list(all_hosts.keys())[s_idx:]:
+                pdata.append('{:<16s}'.format(host[0:max_host_len]))
+
+            ui_print(term, pdata)
+            time.sleep(0.05)
 
     # only this thread and Exceptions print any info
     # therefore, it's this thread's task to exit full screen
@@ -69,6 +125,12 @@ def stdin_processor():
 def sigint_handler(a, b):
     gvars['stop_run'] = True
 
+def get_hosts():
+    ret = {}
+    for i in range(1, 51):
+        ret['host-{} {}'.format(i, str(i)*i)] = {}
+    return ret
+
 def main():
     gvars['term'] = Terminal()
 
@@ -77,7 +139,9 @@ def main():
     gvars['exited_fullscreen'] = True # by default we're not in this mode
     gvars['exit_fullscreen_lock'] = threading.Lock()
 
-    gvars['ui_renderer_thread'] = threading.Thread(target=thread_runner, args=(ui_renderer,))
+    gvars['ui_renderer_thread'] = threading.Thread(target=thread_runner, args=(
+        ui_renderer, get_hosts()
+    ))
 
     thr_list = [
         gvars['ui_renderer_thread'],
