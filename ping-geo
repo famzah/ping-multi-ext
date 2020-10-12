@@ -9,6 +9,49 @@ import signal
 
 gvars = {}
 
+class TermCtrl:
+    def __init__(self, key):
+        self.code = getattr(gvars['term'], key)
+
+def _compose_printed_str(data_row, t_width):
+    printed_str = ''
+    pstr_len = 0
+
+    for part_idx, part_value in enumerate(data_row):
+        if isinstance(part_value, TermCtrl):
+            printed_str += part_value.code
+        elif isinstance(part_value, str):
+            if pstr_len + len(part_value) <= t_width:
+                printed_str += part_value
+                pstr_len += len(part_value)
+            else: # we are going to exceed the width
+                cut_value = part_value[0:(t_width - pstr_len)]
+
+                printed_str += cut_value
+                pstr_len += len(cut_value)
+
+                break # stop processing the input data
+        else:
+            raise NotImplementedError(part_value)
+
+    if pstr_len > t_width:
+        raise Exception(f'Assertion failed: "{printed_str}"')
+
+    return printed_str
+
+def _sanity_check_data_row(data_row, i):
+    for part_idx, part_value in enumerate(data_row):
+        part_str_id = f'Screen data row with index {i} part {part_idx}'
+
+        if not isinstance(part_value, str) and not isinstance(part_value, TermCtrl):
+            raise ValueError(f'{part_str_id} is not "str" nor "TermCtrl"')
+        if isinstance(part_value, str):
+            for c in ['\n', '\r', '\t']:
+                if c in part_value:
+                    raise ValueError(
+                        f'{part_str_id} cannot contain the ASCII character {ord(c)}: "{part_value}"'
+                    )
+
 def ui_print(term, data):
     # get it every time, so that we react if the terminal changes (ie. if it gets resized)
     t_height = term.height
@@ -38,51 +81,60 @@ def ui_print(term, data):
         if i not in old_screen: # first initialization of "old_screen"
             old_screen[i] = None
 
-        data_row = data[i]
+        try:
+            data_row = data[i]
+        except IndexError:
+            data_row = ['']
 
-        if not isinstance(data_row, str):
-            raise ValueError(f'Screen data row with index {i} is not "str"')
+        _sanity_check_data_row(data_row, i)
 
-        for c in ['\n', '\r', '\t']:
-            if c in data_row:
-                raise ValueError(f'Data lines cannot contain ASCII character {ord(c)}: {data_row}')
+        printed_str = _compose_printed_str(data_row, t_width)
 
-        if len(data_row) > t_width:
-            data_row = data_row[0:t_width]
-            cut_suffix = '..>'
-            data_row = data_row[:-len(cut_suffix)] + cut_suffix
-            if len(data_row) > t_width: # if the terminal is really narrow
-                data_row = data_row[0:t_width]
-
-        if data_row != old_screen[i]: # this could be optimized to draw only a part of the line
-            old_screen[i] = data_row
+        if printed_str != old_screen[i]: # this could be optimized to draw only a part of the line
+            old_screen[i] = printed_str
             screen_changed = True
-            print(term.move(i, 0) + data_row, end='', flush=False)
+            # always restore the color to "normal" in case we cut this in the data row
+            print(term.move(i, 0) + printed_str + term.normal, end='', flush=False)
 
     if screen_changed:
         sys.stdout.flush()
 
+    return term_size_changed, t_height, t_width
+
 def ui_renderer(all_hosts):
     term = gvars['term']
 
+    if term.number_of_colors < 8:
+        raise Exception('Your terminal does not support colors')
+
     with gvars['exit_fullscreen_lock']:
         gvars['exited_fullscreen'] = False
-        print(gvars['term'].enter_fullscreen())
+        print(term.enter_fullscreen())
 
-    s_idx = 15
-    with gvars['term'].hidden_cursor():
+    pdata = []
+    with term.hidden_cursor():
         while not gvars['stop_run']:
+            term_size_changed, t_height, t_width = ui_print(term, pdata)
+
+            if not term_size_changed:
+                time.sleep(0.05)
+
             pdata = []
 
-            pdata.append('Menu...')
-            pdata.append('')
+            pdata.append([TermCtrl('green'), 'Menu...', '1234567890' * 15 + 'Z', TermCtrl('red'), 'abb'])
+            pdata.append([''])
+
+            if term_size_changed:
+                min_idx = 0
+                max_idx = t_height - len(pdata) # skip the header rows
+                sel_idx = None
+
+            if max_idx < 0:
+                continue # terminal is so small that it doesn't have any space for data
 
             max_host_len = 16
-            for host in list(all_hosts.keys())[s_idx:]:
-                pdata.append('{:<16s}'.format(host[0:max_host_len]))
-
-            ui_print(term, pdata)
-            time.sleep(0.05)
+            for host in list(all_hosts.keys())[min_idx:max_idx]:
+                pdata.append(['{:<16s}'.format(host[0:max_host_len])])
 
     # only this thread and Exceptions print any info
     # therefore, it's this thread's task to exit full screen
