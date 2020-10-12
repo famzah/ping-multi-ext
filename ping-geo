@@ -48,7 +48,8 @@ def ui_print(term, data):
                 raise ValueError(f'Data lines cannot contain ASCII character {ord(c)}: {data_row}')
 
         if len(data_row) > t_width:
-            cut_suffix = ' ...'
+            data_row = data_row[0:t_width]
+            cut_suffix = '..>'
             data_row = data_row[:-len(cut_suffix)] + cut_suffix
             if len(data_row) > t_width: # if the terminal is really narrow
                 data_row = data_row[0:t_width]
