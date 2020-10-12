@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+
+from blessings import Terminal
+import time
+import threading
+import sys
+import curtsies
+import signal
+
+gvars = {}
+
+def ui_renderer():
+    term = gvars['term']
+
+    with gvars['exit_fullscreen_lock']:
+        gvars['exited_fullscreen'] = False
+        print(gvars['term'].enter_fullscreen())
+
+    while not gvars['stop_run']:
+        print(term.clear())
+        print('Term height: {}'.format(term.height))
+        print('Term width : {}'.format(term.width))
+
+        print(term.bold('Hi there!'))
+        with term.location(0, term.height - 1 + 2):
+            print('This is at the bottom.\naa', end='', flush=True)
+
+        time.sleep(0.05)
+
+    # only this thread and Exceptions print any info
+    # therefore, it's this thread's task to exit full screen
+    exit_fullscreen()
+
+def _exit_fullscreen():
+    if not gvars['exited_fullscreen']:
+        gvars['exited_fullscreen'] = True
+        print(gvars['term'].exit_fullscreen(), end='', flush=True)
+
+def exit_fullscreen():
+    if threading.current_thread() != gvars['ui_renderer_thread']: # avoid deadlock
+        with gvars['exit_fullscreen_lock']:
+            _exit_fullscreen()
+    else: # ui_renderer_thread (the only thread which can set "exited_fullscreen = False"
+        _exit_fullscreen()
+
+def thread_runner(*args):
+    try:
+        func = args[0]
+        func(*args[1:])
+    except:
+        gvars['stop_run'] = True
+
+        if threading.current_thread() != gvars['ui_renderer_thread']:
+            # this thread must exit very soon, because of the gvars['stop_run'] == False
+            # wait for it to call exit_fullscreen(), so that we can successfully
+            # print() the exception info
+            gvars['ui_renderer_thread'].join(5) # best effort
+
+        exit_fullscreen()
+        raise # and print() the exception info
+
+def stdin_processor():
+    with curtsies.Input() as input_generator:
+        while not gvars['stop_run']:
+            e = input_generator.send(0.05)
+            if e is None:
+                continue # nothing pressed within the timeout period
+
+def sigint_handler(a, b):
+    gvars['stop_run'] = True
+
+def main():
+    gvars['term'] = Terminal()
+
+    gvars['stop_run'] = False
+
+    gvars['exited_fullscreen'] = True # by default we're not in this mode
+    gvars['exit_fullscreen_lock'] = threading.Lock()
+
+    gvars['ui_renderer_thread'] = threading.Thread(target=thread_runner, args=(ui_renderer,))
+
+    thr_list = [
+        gvars['ui_renderer_thread'],
+        threading.Thread(target=thread_runner, args=(stdin_processor,)),
+    ]
+
+    signal.signal(signal.SIGINT, sigint_handler) # CTRL+C
+
+    for thr in thr_list:
+        thr.start()
+
+    while not gvars['stop_run']:
+        time.sleep(0.05)
+
+    while threading.active_count() > 1:
+        for thr in thr_list:
+            if thr.is_alive():
+                thr.join()
+        time.sleep(0.05)
+
+thread_runner(main)
