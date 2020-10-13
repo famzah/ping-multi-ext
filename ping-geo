@@ -8,6 +8,7 @@ import curtsies
 import signal
 import random
 import string
+import math
 
 gvars = {}
 
@@ -180,6 +181,10 @@ def _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname):
     if host_data_type == 'raw':
         first_row.extend([
             '/',
+            TermCtrl('bold'), 'Home', TermCtrl('normal'),
+            '/',
+            TermCtrl('bold'), 'End', TermCtrl('normal'),
+            '/',
             TermCtrl('bold'), 'ESC', TermCtrl('normal'),
         ])
 
@@ -252,6 +257,15 @@ class DataScroller:
             self.update_max_id()
             self.sel_idx = None
 
+    def key_end(self):
+        self.max_idx = self.data_items_count - 1
+
+        self.min_idx = max(0, self.max_idx - self.avail_term_rows + 1)
+        self.min_idx = max(0, int(math.ceil(self.min_idx / 5.0) * 5))
+
+        self.update_max_id()
+        self.sel_idx = None
+
     def key_enter(self):
         if self.sel_idx is None:
             return None
@@ -320,6 +334,10 @@ def ui_renderer(all_hosts):
                         scroller.key_pageup()
                     elif key == '<PAGEDOWN>':
                         scroller.key_pagedown()
+                    elif key == '<HOME>':
+                        scroller.reset()
+                    elif key == '<END>':
+                        scroller.key_end()
                     elif key == '<ENTER>' and host_data_type == 'parsed':
                         sel_hostname = scroller.key_enter()
                         if sel_hostname is None:
