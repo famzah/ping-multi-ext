@@ -123,7 +123,20 @@ def ui_renderer(all_hosts):
 
             pdata = []
 
-            pdata.append([TermCtrl('green'), 'Menu...', '1234567890' * 15 + 'Z', TermCtrl('red'), 'abb'])
+            pdata.append([
+                'Keys: ',
+                TermCtrl('bold'), '↑', TermCtrl('normal'),
+                '/',
+                TermCtrl('bold'), '↓', TermCtrl('normal'),
+                '/',
+                TermCtrl('bold'), 'Enter', TermCtrl('normal'),
+                '/',
+                TermCtrl('bold'), 'PgUp', TermCtrl('normal'),
+                '/',
+                TermCtrl('bold'), 'PgDn', TermCtrl('normal'),
+                ' | ',
+                TermCtrl('bold'), 'Q', TermCtrl('normal'), 'uit',
+            ])
             pdata.append(cmd_err)
 
             if term_size_changed:
