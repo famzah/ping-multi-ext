@@ -189,6 +189,14 @@ def ui_renderer(all_hosts):
                         if max_idx < hosts_count - 1:
                             min_idx += 5
                             min_idx_updated = True
+                    elif key == '<ENTER>':
+                        if sel_idx is None:
+                            cmd_err = [
+                                TermCtrl('bold'), TermCtrl('red'),
+                                'You need to select a row with the up and down arrows first',
+                            ]
+                    elif key == '<ESC>':
+                        pass
                     elif key.lower() == 'q':
                         gvars['stop_run'] = True
                     else:
@@ -264,7 +272,11 @@ def stdin_processor():
                 continue # nothing pressed within the timeout period
 
             with gvars['keys_pressed_lock']:
-                gvars['keys_pressed_list'].append(str(e))
+                key = str(e)
+                if key == '<Ctrl-j>':
+                    key = '<ENTER>'
+
+                gvars['keys_pressed_list'].append(key)
 
 def sigint_handler(a, b):
     gvars['stop_run'] = True
