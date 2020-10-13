@@ -220,6 +220,7 @@ class DataScroller:
 
     def set_avail_term_rows(self, n):
         self.avail_term_rows = n
+        self.scroll_by = max(1, int(n / 2.0))
 
     def update_max_id(self):
         self.max_idx = min(
@@ -252,14 +253,16 @@ class DataScroller:
     def key_pageup(self):
         self.in_tail_mode = False
         if self.min_idx > 0:
-            self.min_idx -= 5
+            self.min_idx -= self.scroll_by
+            self.min_idx = self._align_value_to(self.min_idx, self.scroll_by)
+
             self.update_max_id()
             self.sel_idx = None
 
     def key_pagedown(self):
         self.in_tail_mode = False
         if self.max_idx < self.data_items_count - 1:
-            self.min_idx += 5
+            self.min_idx += self.scroll_by
             self.update_max_id()
             self.sel_idx = None
 
@@ -278,7 +281,7 @@ class DataScroller:
         self.max_idx = self.data_items_count - 1
 
         self.min_idx = max(0, self.max_idx - self.avail_term_rows + 1)
-        self.min_idx = max(0, int(math.ceil(self.min_idx / 5.0) * 5))
+        self.min_idx = self._align_value_to(self.min_idx, self.scroll_by)
 
         self.update_max_id()
         self.sel_idx = None
@@ -297,6 +300,9 @@ class DataScroller:
 
         self.in_tail_mode = False
         return self.hosts_print_order[self.sel_idx]
+
+    def _align_value_to(self, src_value, aligned_to_value):
+        return int(math.ceil(src_value / (aligned_to_value * 1.0)) * aligned_to_value)
 
 def ui_renderer(all_hosts):
     term = gvars['term']
