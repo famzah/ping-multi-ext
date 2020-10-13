@@ -147,6 +147,33 @@ def _ui_render_all_hosts_data(
         else:
             raise NotImplementedError(host_data_type)
 
+def _ui_render_header(screen_rows, cmd_err, host_data_type):
+    if host_data_type == 'parsed':
+        screen_rows.append([
+            'Keys: ',
+            TermCtrl('bold'), '↑', TermCtrl('normal'),
+            '/',
+            TermCtrl('bold'), '↓', TermCtrl('normal'),
+            '/',
+            TermCtrl('bold'), 'Enter', TermCtrl('normal'),
+            '/',
+            TermCtrl('bold'), 'PgUp', TermCtrl('normal'),
+            '/',
+            TermCtrl('bold'), 'PgDn', TermCtrl('normal'),
+            ' | ',
+            TermCtrl('bold'), 'Q', TermCtrl('normal'), 'uit',
+        ])
+        screen_rows.append([
+            TermCtrl('bold'),
+            ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format('Hostname'),
+            'Ping results', TermCtrl('normal'), ' (newest first)',
+        ])
+    else:
+        raise NotImplementedError(host_data_type)
+
+    # insert as second row (moving any other existing headers next)
+    screen_rows.insert(1, cmd_err)
+
 def ui_renderer(all_hosts):
     term = gvars['term']
 
@@ -159,6 +186,7 @@ def ui_renderer(all_hosts):
 
     screen_rows = []
     cmd_err = ['']
+    host_data_type = 'parsed'
     with term.hidden_cursor():
         while not gvars['stop_run']:
             term_size_changed, t_height, t_width = ui_print(term, screen_rows)
@@ -168,26 +196,7 @@ def ui_renderer(all_hosts):
 
             screen_rows = []
 
-            screen_rows.append([
-                'Keys: ',
-                TermCtrl('bold'), '↑', TermCtrl('normal'),
-                '/',
-                TermCtrl('bold'), '↓', TermCtrl('normal'),
-                '/',
-                TermCtrl('bold'), 'Enter', TermCtrl('normal'),
-                '/',
-                TermCtrl('bold'), 'PgUp', TermCtrl('normal'),
-                '/',
-                TermCtrl('bold'), 'PgDn', TermCtrl('normal'),
-                ' | ',
-                TermCtrl('bold'), 'Q', TermCtrl('normal'), 'uit',
-            ])
-            screen_rows.append(cmd_err)
-            screen_rows.append([
-                TermCtrl('bold'),
-                ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format('Hostname'),
-                'Ping results', TermCtrl('normal'), ' (newest first)',
-            ])
+            _ui_render_header(screen_rows, cmd_err, host_data_type)
 
             if term_size_changed:
                 avail_term_rows = t_height - len(screen_rows) # skip the header rows
@@ -243,7 +252,7 @@ def ui_renderer(all_hosts):
                 continue
 
             _ui_render_all_hosts_data(
-                screen_rows, all_hosts, 'parsed', min_idx, max_idx, sel_idx, t_width
+                screen_rows, all_hosts, host_data_type, min_idx, max_idx, sel_idx, t_width
             )
 
     # only this thread and Exceptions print any info
