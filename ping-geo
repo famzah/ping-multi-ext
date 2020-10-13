@@ -125,18 +125,18 @@ def ui_renderer(all_hosts):
         gvars['exited_fullscreen'] = False
         print(term.enter_fullscreen())
 
-    pdata = []
+    screen_rows = []
     cmd_err = ['']
     with term.hidden_cursor():
         while not gvars['stop_run']:
-            term_size_changed, t_height, t_width = ui_print(term, pdata)
+            term_size_changed, t_height, t_width = ui_print(term, screen_rows)
 
             if not term_size_changed:
                 time.sleep(0.05)
 
-            pdata = []
+            screen_rows = []
 
-            pdata.append([
+            screen_rows.append([
                 'Keys: ',
                 TermCtrl('bold'), '↑', TermCtrl('normal'),
                 '/',
@@ -150,10 +150,10 @@ def ui_renderer(all_hosts):
                 ' | ',
                 TermCtrl('bold'), 'Q', TermCtrl('normal'), 'uit',
             ])
-            pdata.append(cmd_err)
+            screen_rows.append(cmd_err)
 
             if term_size_changed:
-                avail_term_rows = t_height - len(pdata) # skip the header rows
+                avail_term_rows = t_height - len(screen_rows) # skip the header rows
                 hosts_count = len(all_hosts.keys())
                 min_idx = 0
                 max_idx = min(min_idx + avail_term_rows - 1, hosts_count - 1)
@@ -215,7 +215,7 @@ def ui_renderer(all_hosts):
                     all_hosts[host], t_width - len(host_id_str)
                 ))
 
-                pdata.append(row)
+                screen_rows.append(row)
 
     # only this thread and Exceptions print any info
     # therefore, it's this thread's task to exit full screen
