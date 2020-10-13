@@ -6,6 +6,7 @@ import threading
 import sys
 import curtsies
 import signal
+import random
 
 gvars = {}
 
@@ -102,6 +103,18 @@ def ui_print(term, data):
 
     return term_size_changed, t_height, t_width
 
+def _compose_host_data_str(host_data, t_width):
+    s = ''
+    with host_data['lock']:
+        for v_idx in range(1, len(host_data['parsed']) + 1):
+            added_value = '{:3d} '.format(host_data['parsed'][-v_idx])
+
+            if len(s) + len(added_value) > t_width:
+                break
+
+            s += added_value
+    return s
+
 def ui_renderer(all_hosts):
     term = gvars['term']
 
@@ -194,8 +207,13 @@ def ui_renderer(all_hosts):
                 row = []
                 if sel_idx == idx:
                     row.append(TermCtrl('bold'))
-                row.append('{:<16s} '.format(host[0:max_host_len]))
-                row.append(TermCtrl('normal'))
+
+                host_id_str = '{:<16s} '.format(host[0:max_host_len])
+                row.append(host_id_str)
+
+                row.append(_compose_host_data_str(
+                    all_hosts[host], t_width - len(host_id_str)
+                ))
 
                 pdata.append(row)
 
@@ -247,8 +265,25 @@ def sigint_handler(a, b):
 def get_hosts():
     ret = {}
     for i in range(1, 51):
-        ret['host-{} {}'.format(i, str(i)*i)] = {}
+        ret['host-{} {}'.format(i, str(i)*i)] = {
+            'lock': threading.Lock(),
+            'parsed': [],
+            'raw': [],
+        }
     return ret
+
+def update_hosts_data():
+    while not gvars['stop_run']:
+        for hostname, data in gvars['proc_data'].items():
+            if random.randint(0, 1):
+                continue
+
+            n = random.randint(0, 900)
+            with data['lock']:
+                data['parsed'].append(n)
+                data['raw'].append(f'Ping reply {n} ms')
+
+        time.sleep(0.1)
 
 def main():
     gvars['term'] = Terminal()
@@ -261,13 +296,16 @@ def main():
     gvars['exited_fullscreen'] = True # by default we're not in this mode
     gvars['exit_fullscreen_lock'] = threading.Lock()
 
+    gvars['proc_data'] = get_hosts()
+
     gvars['ui_renderer_thread'] = threading.Thread(target=thread_runner, args=(
-        ui_renderer, get_hosts()
+        ui_renderer, gvars['proc_data']
     ))
 
     thr_list = [
         gvars['ui_renderer_thread'],
         threading.Thread(target=thread_runner, args=(stdin_processor,)),
+        threading.Thread(target=thread_runner, args=(update_hosts_data,)),
     ]
 
     signal.signal(signal.SIGINT, sigint_handler) # CTRL+C
