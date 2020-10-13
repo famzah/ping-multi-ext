@@ -210,9 +210,10 @@ def _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname):
     screen_rows.insert(1, cmd_err)
 
 class DataScroller:
-    def __init__(self, hosts_print_order):
+    def __init__(self, hosts_print_order, tail_mode_cap):
         self.hosts_print_order = hosts_print_order
         self.initialized = False
+        self.tail_mode_cap = tail_mode_cap
     
     def set_data_items_count(self, n):
         self.data_items_count = n
@@ -228,36 +229,52 @@ class DataScroller:
 
     def reset(self):
         self.initialized = True
+        self.in_tail_mode = self.tail_mode_cap
 
         self.min_idx = 0
         self.sel_idx = None
         self.update_max_id()
 
     def key_down(self):
+        self.in_tail_mode = False
         if self.sel_idx is not None:
             self.sel_idx += 1
         if self.sel_idx is None or self.sel_idx > self.max_idx:
             self.sel_idx = self.min_idx
 
     def key_up(self):
+        self.in_tail_mode = False
         if self.sel_idx is not None:
             self.sel_idx -= 1
         if self.sel_idx is None or self.sel_idx < self.min_idx:
             self.sel_idx = self.max_idx
 
     def key_pageup(self):
+        self.in_tail_mode = False
         if self.min_idx > 0:
             self.min_idx -= 5
             self.update_max_id()
             self.sel_idx = None
 
     def key_pagedown(self):
+        self.in_tail_mode = False
         if self.max_idx < self.data_items_count - 1:
             self.min_idx += 5
             self.update_max_id()
             self.sel_idx = None
 
+        if self.max_idx == self.data_items_count - 1: # we're already at the very end
+            if self.tail_mode_cap:
+                self.in_tail_mode = True
+
+    def key_home(self):
+        self.reset()
+        self.in_tail_mode = False
+
     def key_end(self):
+        if self.tail_mode_cap:
+            self.in_tail_mode = True
+
         self.max_idx = self.data_items_count - 1
 
         self.min_idx = max(0, self.max_idx - self.avail_term_rows + 1)
@@ -266,9 +283,19 @@ class DataScroller:
         self.update_max_id()
         self.sel_idx = None
 
+    def tail(self):
+        if not self.in_tail_mode:
+            return
+
+        self.max_idx = self.data_items_count - 1
+        self.min_idx = max(0, self.max_idx - self.avail_term_rows + 1)
+        self.sel_idx = None
+
     def key_enter(self):
         if self.sel_idx is None:
             return None
+
+        self.in_tail_mode = False
         return self.hosts_print_order[self.sel_idx]
 
 def ui_renderer(all_hosts):
@@ -286,8 +313,8 @@ def ui_renderer(all_hosts):
     host_data_type = 'parsed'
     sel_hostname = None
     scroller_registry = {
-        'parsed': DataScroller(gvars['hosts_print_order']),
-        'raw': DataScroller(None),
+        'parsed': DataScroller(gvars['hosts_print_order'], False),
+        'raw': DataScroller(None, True),
     }
     switched_host_data_type = False
     with term.hidden_cursor():
@@ -335,7 +362,7 @@ def ui_renderer(all_hosts):
                     elif key == '<PAGEDOWN>':
                         scroller.key_pagedown()
                     elif key == '<HOME>':
-                        scroller.reset()
+                        scroller.key_home()
                     elif key == '<END>':
                         scroller.key_end()
                     elif key == '<ENTER>' and host_data_type == 'parsed':
@@ -370,6 +397,9 @@ def ui_renderer(all_hosts):
 
             if switched_host_data_type:
                 continue # mandatory restart
+
+            if host_data_type == 'raw':
+                scroller.tail()
 
             if scroller.max_idx < 0:
                 # terminal is so small that it doesn't have any space for data, or there
