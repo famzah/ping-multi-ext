@@ -93,8 +93,9 @@ def ui_print(term, data):
         if printed_str != old_screen[i]: # this could be optimized to draw only a part of the line
             old_screen[i] = printed_str
             screen_changed = True
-            # always restore the color to "normal" in case we cut this in the data row
-            print(term.move(i, 0) + printed_str + term.normal, end='', flush=False)
+            # always restore the color to "normal" in case we cut this in _compose_printed_str()
+            # always clear the line until the end in case we're printing something shorter now
+            print(term.move(i, 0) + printed_str + term.normal + term.clear_eol, end='', flush=False)
 
     if screen_changed:
         sys.stdout.flush()
@@ -112,6 +113,7 @@ def ui_renderer(all_hosts):
         print(term.enter_fullscreen())
 
     pdata = []
+    cmd_err = ['']
     with term.hidden_cursor():
         while not gvars['stop_run']:
             term_size_changed, t_height, t_width = ui_print(term, pdata)
@@ -122,19 +124,67 @@ def ui_renderer(all_hosts):
             pdata = []
 
             pdata.append([TermCtrl('green'), 'Menu...', '1234567890' * 15 + 'Z', TermCtrl('red'), 'abb'])
-            pdata.append([''])
+            pdata.append(cmd_err)
 
             if term_size_changed:
+                avail_term_rows = t_height - len(pdata) # skip the header rows
+                hosts_count = len(all_hosts.keys())
                 min_idx = 0
-                max_idx = t_height - len(pdata) # skip the header rows
+                max_idx = min(min_idx + avail_term_rows - 1, hosts_count - 1)
                 sel_idx = None
 
+            with gvars['keys_pressed_lock']:
+                while len(gvars['keys_pressed_list']):
+                    key = gvars['keys_pressed_list'].pop(0)
+                    cmd_err = ['']
+
+                    min_idx_updated = False
+                    if key == '<DOWN>':
+                        if sel_idx is not None:
+                            sel_idx += 1
+                        if sel_idx is None or sel_idx > max_idx:
+                            sel_idx = min_idx
+                    elif key == '<UP>':
+                        if sel_idx is not None:
+                            sel_idx -= 1
+                        if sel_idx is None or sel_idx < min_idx:
+                            sel_idx = max_idx
+                    elif key == '<PAGEUP>':
+                        if min_idx > 0:
+                            min_idx -= 5
+                            min_idx_updated = True
+                    elif key == '<PAGEDOWN>':
+                        if max_idx < hosts_count - 1:
+                            min_idx += 5
+                            min_idx_updated = True
+                    elif key.lower() == 'q':
+                        gvars['stop_run'] = True
+                    else:
+                        cmd_err = [TermCtrl('bold'), TermCtrl('red'), f'Unknown command "{key}"']
+
+                    if min_idx_updated:
+                        max_idx = min(min_idx + avail_term_rows - 1, hosts_count - 1)
+                        sel_idx = None
+
             if max_idx < 0:
-                continue # terminal is so small that it doesn't have any space for data
+                # terminal is so small that it doesn't have any space for data, or there
+                # is no data
+                continue
 
             max_host_len = 16
-            for host in list(all_hosts.keys())[min_idx:max_idx]:
-                pdata.append(['{:<16s}'.format(host[0:max_host_len])])
+            for idx, host in enumerate(list(all_hosts.keys())):
+                if idx < min_idx:
+                    continue
+                if idx > max_idx:
+                    continue
+
+                row = []
+                if sel_idx == idx:
+                    row.append(TermCtrl('bold'))
+                row.append('{:<16s} '.format(host[0:max_host_len]))
+                row.append(TermCtrl('normal'))
+
+                pdata.append(row)
 
     # only this thread and Exceptions print any info
     # therefore, it's this thread's task to exit full screen
@@ -175,6 +225,9 @@ def stdin_processor():
             if e is None:
                 continue # nothing pressed within the timeout period
 
+            with gvars['keys_pressed_lock']:
+                gvars['keys_pressed_list'].append(str(e))
+
 def sigint_handler(a, b):
     gvars['stop_run'] = True
 
@@ -188,6 +241,9 @@ def main():
     gvars['term'] = Terminal()
 
     gvars['stop_run'] = False
+
+    gvars['keys_pressed_list'] = []
+    gvars['keys_pressed_lock'] = threading.Lock()
 
     gvars['exited_fullscreen'] = True # by default we're not in this mode
     gvars['exit_fullscreen_lock'] = threading.Lock()
