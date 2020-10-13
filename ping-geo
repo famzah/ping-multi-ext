@@ -7,6 +7,7 @@ import sys
 import curtsies
 import signal
 import random
+import string
 
 gvars = {}
 
@@ -342,7 +343,12 @@ def ui_renderer(all_hosts):
                     elif key.lower() == 'q':
                         gvars['stop_run'] = True
                     else:
-                        cmd_err = [TermCtrl('bold'), TermCtrl('red'), f'Unknown command "{key}"']
+                        if not all(c in string.printable for c in key):
+                            # key = '0x' + binascii.hexlify(key.encode('ascii')).decode('ascii')
+                            key = ''
+                        else:
+                            key = f' "{key}"'
+                        cmd_err = [TermCtrl('bold'), TermCtrl('red'), f'Unknown key command{key}']
 
             if switched_host_data_type:
                 continue # mandatory restart
