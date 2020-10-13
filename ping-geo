@@ -131,48 +131,130 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
 
 def _ui_render_all_hosts_data(
         screen_rows, all_hosts, host_data_type,
-        min_idx, max_idx, sel_idx, t_width
+        min_idx, max_idx, sel_idx, sel_hostname, t_width
     ):
-    for idx, hostname in enumerate(list(all_hosts.keys())):
-        if idx < min_idx:
-            continue
-        if idx > max_idx:
-            continue
-
         if host_data_type == 'parsed':
-            screen_rows.append(_compose_host_data_parsed_str(
-                hostname, all_hosts[hostname],
-                t_width, sel_idx == idx
-            ))
+            for idx, hostname in enumerate(list(gvars['hosts_print_order'])):
+                if idx < min_idx:
+                    continue
+                if idx > max_idx:
+                    continue
+
+                screen_rows.append(_compose_host_data_parsed_str(
+                    hostname, all_hosts[hostname],
+                    t_width, sel_idx == idx
+                ))
+        elif host_data_type == 'raw':
+            for idx, data_row in enumerate(list(all_hosts[sel_hostname]['raw'])):
+                if idx < min_idx:
+                    continue
+                if idx > max_idx:
+                    continue
+                
+                screen_rows.append(data_row)
         else:
             raise NotImplementedError(host_data_type)
 
-def _ui_render_header(screen_rows, cmd_err, host_data_type):
+def _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname):
+    first_row = [
+        'Keys: ',
+    ]
+
     if host_data_type == 'parsed':
-        screen_rows.append([
-            'Keys: ',
+        first_row.extend([
             TermCtrl('bold'), '↑', TermCtrl('normal'),
             '/',
             TermCtrl('bold'), '↓', TermCtrl('normal'),
             '/',
             TermCtrl('bold'), 'Enter', TermCtrl('normal'),
             '/',
-            TermCtrl('bold'), 'PgUp', TermCtrl('normal'),
-            '/',
-            TermCtrl('bold'), 'PgDn', TermCtrl('normal'),
-            ' | ',
-            TermCtrl('bold'), 'Q', TermCtrl('normal'), 'uit',
         ])
+
+    first_row.extend([
+        TermCtrl('bold'), 'PgUp', TermCtrl('normal'),
+        '/',
+        TermCtrl('bold'), 'PgDn', TermCtrl('normal'),
+    ])
+
+    if host_data_type == 'raw':
+        first_row.extend([
+            '/',
+            TermCtrl('bold'), 'ESC', TermCtrl('normal'),
+        ])
+
+    first_row.extend([
+        ' | ',
+        TermCtrl('bold'), 'Q', TermCtrl('normal'), 'uit',
+    ])
+
+    screen_rows.append(first_row)
+
+    if host_data_type == 'parsed':
         screen_rows.append([
             TermCtrl('bold'),
             ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format('Hostname'),
             'Ping results', TermCtrl('normal'), ' (newest first)',
         ])
+    elif host_data_type == 'raw':
+        screen_rows.append([TermCtrl('bold'), f'Raw ping results for "{sel_hostname}"'])
     else:
         raise NotImplementedError(host_data_type)
 
     # insert as second row (moving any other existing headers next)
     screen_rows.insert(1, cmd_err)
+
+class DataScroller:
+    def __init__(self, hosts_print_order):
+        self.hosts_print_order = hosts_print_order
+        self.initialized = False
+    
+    def set_data_items_count(self, n):
+        self.data_items_count = n
+
+    def set_avail_term_rows(self, n):
+        self.avail_term_rows = n
+
+    def update_max_id(self):
+        self.max_idx = min(
+            self.min_idx + self.avail_term_rows - 1,
+            self.data_items_count - 1
+        )
+
+    def reset(self):
+        self.initialized = True
+
+        self.min_idx = 0
+        self.sel_idx = None
+        self.update_max_id()
+
+    def key_down(self):
+        if self.sel_idx is not None:
+            self.sel_idx += 1
+        if self.sel_idx is None or self.sel_idx > self.max_idx:
+            self.sel_idx = self.min_idx
+
+    def key_up(self):
+        if self.sel_idx is not None:
+            self.sel_idx -= 1
+        if self.sel_idx is None or self.sel_idx < self.min_idx:
+            self.sel_idx = self.max_idx
+
+    def key_pageup(self):
+        if self.min_idx > 0:
+            self.min_idx -= 5
+            self.update_max_id()
+            self.sel_idx = None
+
+    def key_pagedown(self):
+        if self.max_idx < self.data_items_count - 1:
+            self.min_idx += 5
+            self.update_max_id()
+            self.sel_idx = None
+
+    def key_enter(self):
+        if self.sel_idx is None:
+            return None
+        return self.hosts_print_order[self.sel_idx]
 
 def ui_renderer(all_hosts):
     term = gvars['term']
@@ -187,6 +269,12 @@ def ui_renderer(all_hosts):
     screen_rows = []
     cmd_err = ['']
     host_data_type = 'parsed'
+    sel_hostname = None
+    scroller_registry = {
+        'parsed': DataScroller(gvars['hosts_print_order']),
+        'raw': DataScroller(None),
+    }
+    switched_host_data_type = False
     with term.hidden_cursor():
         while not gvars['stop_run']:
             term_size_changed, t_height, t_width = ui_print(term, screen_rows)
@@ -196,63 +284,78 @@ def ui_renderer(all_hosts):
 
             screen_rows = []
 
-            _ui_render_header(screen_rows, cmd_err, host_data_type)
+            _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname)
 
-            if term_size_changed:
-                avail_term_rows = t_height - len(screen_rows) # skip the header rows
-                hosts_count = len(all_hosts.keys())
-                min_idx = 0
-                max_idx = min(min_idx + avail_term_rows - 1, hosts_count - 1)
-                sel_idx = None
+            scroller = scroller_registry[host_data_type]
 
+            if host_data_type == 'parsed':
+                scroller.set_data_items_count(len(gvars['hosts_print_order']))
+            elif host_data_type == 'raw':
+                scroller.set_data_items_count(len(all_hosts[sel_hostname]['raw']))
+            else:
+                raise NotImplementedError(host_data_type)
+
+            if term_size_changed or not scroller.initialized:
+                scroller.set_avail_term_rows(t_height - len(screen_rows)) # skip the header rows
+                scroller.reset()
+
+            if switched_host_data_type and host_data_type == 'raw':
+                scroller.reset()
+
+            scroller.update_max_id()
+
+            switched_host_data_type = False
             with gvars['keys_pressed_lock']:
                 while len(gvars['keys_pressed_list']):
                     key = gvars['keys_pressed_list'].pop(0)
                     cmd_err = ['']
 
                     min_idx_updated = False
-                    if key == '<DOWN>':
-                        if sel_idx is not None:
-                            sel_idx += 1
-                        if sel_idx is None or sel_idx > max_idx:
-                            sel_idx = min_idx
-                    elif key == '<UP>':
-                        if sel_idx is not None:
-                            sel_idx -= 1
-                        if sel_idx is None or sel_idx < min_idx:
-                            sel_idx = max_idx
+                    if key == '<DOWN>' and host_data_type == 'parsed':
+                        scroller.key_down()
+                    elif key == '<UP>' and host_data_type == 'parsed':
+                        scroller.key_up()
                     elif key == '<PAGEUP>':
-                        if min_idx > 0:
-                            min_idx -= 5
-                            min_idx_updated = True
+                        scroller.key_pageup()
                     elif key == '<PAGEDOWN>':
-                        if max_idx < hosts_count - 1:
-                            min_idx += 5
-                            min_idx_updated = True
-                    elif key == '<ENTER>':
-                        if sel_idx is None:
+                        scroller.key_pagedown()
+                    elif key == '<ENTER>' and host_data_type == 'parsed':
+                        sel_hostname = scroller.key_enter()
+                        if sel_hostname is None:
                             cmd_err = [
                                 TermCtrl('bold'), TermCtrl('red'),
                                 'You need to select a row with the up and down arrows first',
                             ]
+                        else:
+                            host_data_type = 'raw'
+
+                            switched_host_data_type = True
+                            break # mandatory restart
                     elif key == '<ESC>':
-                        pass
+                        if host_data_type == 'raw':
+                            host_data_type = 'parsed'
+
+                            switched_host_data_type = True
+                            break # mandatory restart
+                        else:
+                            scroller.sel_idx = None
                     elif key.lower() == 'q':
                         gvars['stop_run'] = True
                     else:
                         cmd_err = [TermCtrl('bold'), TermCtrl('red'), f'Unknown command "{key}"']
 
-                    if min_idx_updated:
-                        max_idx = min(min_idx + avail_term_rows - 1, hosts_count - 1)
-                        sel_idx = None
+            if switched_host_data_type:
+                continue # mandatory restart
 
-            if max_idx < 0:
+            if scroller.max_idx < 0:
                 # terminal is so small that it doesn't have any space for data, or there
                 # is no data
                 continue
 
             _ui_render_all_hosts_data(
-                screen_rows, all_hosts, host_data_type, min_idx, max_idx, sel_idx, t_width
+                screen_rows, all_hosts, host_data_type,
+                scroller.min_idx, scroller.max_idx,
+                scroller.sel_idx, sel_hostname, t_width
             )
 
     # only this thread and Exceptions print any info
@@ -307,7 +410,7 @@ def sigint_handler(a, b):
 def get_hosts():
     ret = {}
     for i in range(1, 51):
-        ret['host-{} {}'.format(i, str(i)*i)] = {
+        ret['host-{:2d} {}'.format(i, str(i)*i)] = {
             'lock': threading.Lock(),
             'parsed': [],
             'raw': [],
@@ -323,7 +426,9 @@ def update_hosts_data():
             n = random.randint(0, 900)
             with data['lock']:
                 data['parsed'].append(n)
-                data['raw'].append(f'Ping reply {n} ms')
+                data['raw'].append(
+                    f'Ping reply {n:4} ms for host "{hostname}" #{len(data["raw"])}'
+                )
 
         time.sleep(0.1)
 
@@ -339,6 +444,7 @@ def main():
     gvars['exit_fullscreen_lock'] = threading.Lock()
 
     gvars['proc_data'] = get_hosts()
+    gvars['hosts_print_order'] = sorted(gvars['proc_data'].keys())
 
     gvars['config'] = {
         'max_host_id_len': 16,
