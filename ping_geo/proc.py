@@ -7,6 +7,8 @@ import time
 import signal
 import select
 
+debug = False
+
 def child_process(cmdline, pipe_w, ppid):
     prctl.set_pdeathsig(signal.SIGTERM) # no effect for setuid or binaries with capabilities!
     if os.getppid() != ppid:
@@ -49,6 +51,13 @@ def start_all_processes(hosts_data):
     return fd_lookup
 
 def handle_pipes(hosts_data, fd_lookup, fdlist, exited_hosts):
+    if not len(fdlist):
+        time.sleep(0.05)
+        if debug:
+            print('== No active processes')
+            time.sleep(1)
+        return
+
     (fds_read_ready, _, _) = select.select(fdlist, [], [], 0.05)
     for fd in fds_read_ready:
         s = os.read(fd, 1024 * 1024)
@@ -80,9 +89,38 @@ def handle_pipes(hosts_data, fd_lookup, fdlist, exited_hosts):
 
                 data['raw_complete'] = newline
 
+                if debug and newline:
+                    print(data['raw'][-1])
+
+def handle_exited_hosts(exited_hosts, hosts_data):
+    done_hostnames = []
+    for hostname in exited_hosts:
+        data = hosts_data[hostname]
+        
+        einfo = os.waitid(os.P_PID, data['proc']['pid'], os.WEXITED | os.WNOHANG)
+        if einfo is None: # child not completely exited, yet
+            continue
+
+        done_hostnames.append(hostname)
+
+        if einfo.si_code == os.CLD_EXITED:
+            term_reason = f'exited with status {einfo.si_status}'
+        else:
+            term_reason = f'killed by signal {einfo.si_status}' # (si_code={einfo.si_code})
+
+        with data['lock']:
+            data['raw'].append(f'== Process {term_reason}')
+            data['parsed'].append('EXIT')
+            if debug:
+                print(data['raw'][-1])
+
+    for hostname in done_hostnames:
+        exited_hosts.remove(hostname)
+
 def update_hosts_data(hosts_data, fd_lookup):
     fdlist = list(fd_lookup.keys())
     exited_hosts = []
 
     while True:
         handle_pipes(hosts_data, fd_lookup, fdlist, exited_hosts)
+        handle_exited_hosts(exited_hosts, hosts_data)
