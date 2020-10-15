@@ -55,6 +55,7 @@ class Workflow:
             self.fd_lookup[pipe_r] = hostname
 
         self.exited_hosts = []
+        self.select_fdlist = list(self.fd_lookup.keys())
 
     def parse_line(self, line):
         line = line.strip()
@@ -73,23 +74,21 @@ class Workflow:
         return '{:>4}'.format(res)
 
     def handle_pipes(self):
-        fdlist = list(self.fd_lookup.keys())
-
-        if not len(fdlist):
+        if not len(self.select_fdlist):
             time.sleep(0.05)
             if self.debug:
                 print('== No active processes')
                 time.sleep(1)
             return
 
-        (fds_read_ready, _, _) = select.select(fdlist, [], [], 0.05)
+        (fds_read_ready, _, _) = select.select(self.select_fdlist, [], [], 0.05)
         for fd in fds_read_ready:
             s = os.read(fd, 1024 * 1024)
 
             if not len(s): # EOF
                 terminated = True
                 s = '\nCommand terminated.\n'
-                fdlist.remove(fd)
+                self.select_fdlist.remove(fd)
                 self.exited_hosts.append(self.fd_lookup[fd])
             else:
                 terminated = False
