@@ -6,6 +6,7 @@ import prctl
 import time
 import signal
 import select
+import re
 
 debug = False
 
@@ -50,6 +51,22 @@ def start_all_processes(hosts_data):
         fd_lookup[pipe_r] = hostname
     return fd_lookup
 
+def parse_line(line):
+    line = line.strip()
+    if not len(line):
+        return None
+
+    if re.search(r'^PING\s.+bytes of data', line):
+        return None
+
+    m = re.search(r'^\d+\sbytes\sfrom\s.+\sttl=\d+\s+time=([\d\.]+)\sms$', line)
+    if not m:
+        res = '???'
+    else:
+        res = m.group(1)
+
+    return '{:>4}'.format(res)
+
 def handle_pipes(hosts_data, fd_lookup, fdlist, exited_hosts):
     if not len(fdlist):
         time.sleep(0.05)
@@ -61,11 +78,14 @@ def handle_pipes(hosts_data, fd_lookup, fdlist, exited_hosts):
     (fds_read_ready, _, _) = select.select(fdlist, [], [], 0.05)
     for fd in fds_read_ready:
         s = os.read(fd, 1024 * 1024)
+
         if not len(s): # EOF
+            terminated = True
             s = '\nCommand terminated.\n'
             fdlist.remove(fd)
             exited_hosts.append(fd_lookup[fd])
         else:
+            terminated = False
             s = s.decode('ascii', 'replace')
 
         all_s_parts = s.split('\n')
@@ -89,8 +109,16 @@ def handle_pipes(hosts_data, fd_lookup, fdlist, exited_hosts):
 
                 data['raw_complete'] = newline
 
-                if debug and newline:
-                    print(data['raw'][-1])
+                if newline:
+                    if debug:
+                        print(data['raw'][-1])
+
+                    if not terminated:
+                        pd = parse_line(data['raw'][-1])
+                        if pd is not None:
+                            data['parsed'].append(pd)
+                            if debug:
+                                print(f'PARSED: "{pd}"')
 
 def handle_exited_hosts(exited_hosts, hosts_data):
     done_hostnames = []
