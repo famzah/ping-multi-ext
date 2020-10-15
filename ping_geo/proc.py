@@ -7,21 +7,19 @@ import time
 import signal
 import select
 import re
+import traceback
 
 class Workflow:
     def __init__(self, hosts_data):
         self.debug = False
         self.hosts_data = hosts_data
 
-    def child_process(self, cmdline, pipe_w, ppid):
+    def child_process(self, cmdline, ppid):
         prctl.set_pdeathsig(signal.SIGTERM) # no effect for setuid or binaries with capabilities!
         if os.getppid() != ppid:
-            print('ERROR: Parent already terminated', file=sys.stderr, flush=True)
-            os._exit(255)
+            raise Exception('Parent already terminated')
 
         os.close(0) # stdin
-        os.dup2(pipe_w, 1) # stdout
-        os.dup2(pipe_w, 2) # stderr
 
         args = shlex.split(cmdline)
         os.execvp(args[0], args)
@@ -37,8 +35,25 @@ class Workflow:
         # parent threads are not inherited.
         pid = os.fork()
         if pid == 0:
-            os.close(pipe_r)
-            self.child_process(cmdline, pipe_w, parent_pid)
+            # Make sure that we don't print anything to stdout/err from this uncontrolled child
+            # because it confuses the fullscreen terminal.
+            try:
+                # Therefore, ensure that we first redirect stdout/err to the pipe.
+                os.dup2(pipe_w, 1) # stdout
+                os.dup2(pipe_w, 2) # stderr
+                os.close(pipe_r)
+            except:
+                os._exit(254)
+            # stdout/err are redirected; we can safely print() anything now
+            try:
+                # Only the following function must be in this try..except block
+                # because we always peek 2 tracebacks back upon exception.
+                self.child_process(cmdline, parent_pid)
+            except:
+                ex_type, ex_value, ex_traceback = sys.exc_info()
+                (tb_file, tb_line, tb_func, tb_text) = traceback.extract_tb(ex_traceback)[2]
+                print(f'Fatal error: {tb_func}(): {ex_type.__name__}: {ex_value}')
+                os._exit(255)
         else:
             os.close(pipe_w)
 
