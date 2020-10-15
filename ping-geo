@@ -155,7 +155,10 @@ def _ui_render_all_hosts_data(
                 if idx > max_idx:
                     continue
                 
-                screen_rows.append(data_row)
+                safe_s = str(data_row)
+                for c in ['\n', '\r', '\t']:
+                    safe_s = safe_s.replace(c, ' ')
+                screen_rows.append(safe_s)
         else:
             raise NotImplementedError(host_data_type)
 
@@ -520,14 +523,14 @@ def main():
         'max_host_id_len': 16,
     }
 
-    gvars['ui_renderer_thread'] = threading.Thread(target=thread_runner, args=(
+    gvars['ui_renderer_thread'] = threading.Thread(name='ui_renderer', target=thread_runner, args=(
         ui_renderer, gvars['proc_data']
     ))
 
     thr_list = [
         gvars['ui_renderer_thread'],
-        threading.Thread(target=thread_runner, args=(stdin_processor,)),
-        threading.Thread(target=thread_runner, args=(update_hosts_data,)),
+        threading.Thread(name='stdin_processor', target=thread_runner, args=(stdin_processor,)),
+        threading.Thread(name='update_hosts_data', target=thread_runner, args=(update_hosts_data,)),
     ]
 
     signal.signal(signal.SIGINT, sigint_handler) # CTRL+C
