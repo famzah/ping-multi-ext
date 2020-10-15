@@ -73,7 +73,7 @@ class Workflow:
 
         return '{:>4}'.format(res)
 
-    def handle_pipes(self):
+    def handle_pipes(self, timeout):
         if not len(self.select_fdlist):
             time.sleep(0.05)
             if self.debug:
@@ -81,7 +81,7 @@ class Workflow:
                 time.sleep(1)
             return
 
-        (fds_read_ready, _, _) = select.select(self.select_fdlist, [], [], 0.05)
+        (fds_read_ready, _, _) = select.select(self.select_fdlist, [], [], timeout)
         for fd in fds_read_ready:
             s = os.read(fd, 1024 * 1024)
 
@@ -151,6 +151,6 @@ class Workflow:
         for hostname in done_hostnames:
             self.exited_hosts.remove(hostname)
 
-    def update_hosts_data(self):
-        self.handle_pipes()
+    def update_hosts_data(self, timeout):
+        self.handle_pipes(timeout)
         self.handle_exited_hosts()
