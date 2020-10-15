@@ -476,6 +476,10 @@ def sigint_handler(a, b):
 def populate_hosts():
     ret = {}
     for hostname, cmd in gvars['cmd_args'].ping:
+        if hostname in ret:
+            print(f'Error: Duplicate unique name: {hostname}', file=sys.stderr, flush=True)
+            sys.exit(1)
+
         ret[hostname] = {
             'proc': {
                 'cmdline': cmd,
@@ -485,6 +489,8 @@ def populate_hosts():
             'raw': [''],
             'raw_complete': False,
         }
+
+        gvars['hosts_print_order'].append(hostname)
     return ret
 
 def update_hosts_data():
@@ -516,9 +522,6 @@ def main():
     gvars['exited_fullscreen'] = True # by default we're not in this mode
     gvars['exit_fullscreen_lock'] = threading.Lock()
 
-    gvars['proc_data'] = populate_hosts()
-    gvars['hosts_print_order'] = sorted(gvars['proc_data'].keys())
-
     gvars['config'] = {
         'max_host_id_len': 16,
     }
@@ -547,5 +550,9 @@ def main():
                 thr.join()
         time.sleep(0.05)
 
+# Execute before we get into fullscreen mode.
+# This way we can easily print() anything and exit then.
 gvars['cmd_args'] = parse_argv()
+gvars['hosts_print_order'] = []
+gvars['proc_data'] = populate_hosts()
 thread_runner(main)
