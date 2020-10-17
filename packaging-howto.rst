@@ -33,6 +33,7 @@ Upload package to PyPi
 
     python setup.py sdist
     python setup.py bdist_wheel
+    rm -r build/ ping_geo.egg-info/
     git commit ...
 
     twine upload dist/*
