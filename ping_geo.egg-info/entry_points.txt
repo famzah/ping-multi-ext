@@ -1,0 +1,3 @@
+[console_scripts]
+ping-geo = ping_geo.main:main
+
