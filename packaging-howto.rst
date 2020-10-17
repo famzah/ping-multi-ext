@@ -6,42 +6,45 @@ https://packaging.python.org/guides/distributing-packages-using-setuptools/
 Test pip package locally
 ************************
 
-rm -r ping-geo-inst/
-mkdir ping-geo-inst/
-python3 -m venv ping-geo-inst/
+.. code-block:: bash
+    rm -r ping-geo-inst/
+    mkdir ping-geo-inst/
+    python3 -m venv ping-geo-inst/
 
-cd ping-geo-inst/
-. bin/activate
-pip install --upgrade pip
-pip install wheel
-pip install ../ping-geo/
-which ping-geo
-ping-geo xxx
+    cd ping-geo-inst/
+    . bin/activate
+    pip install --upgrade pip
+    pip install wheel
+    pip install ../ping-geo/
+    which ping-geo
+    ping-geo xxx
 
 Upload package to PyPi
 **********************
 
-. bin/activate
+.. code-block:: bash
+    . bin/activate
 
-pip install --upgrade pip
-pip install wheel
-pip install twine
+    pip install --upgrade pip
+    pip install wheel
+    pip install twine
 
-python setup.py sdist
-python setup.py bdist_wheel
-git commit ...
+    python setup.py sdist
+    python setup.py bdist_wheel
+    git commit ...
 
-twine upload dist/*
+    twine upload dist/*
 
 Test pip package from PyPi repo
 *******************************
 
-rm -r ping-geo-inst/
-mkdir ping-geo-inst/
-python3 -m venv ping-geo-inst/
+.. code-block:: bash
+    rm -r ping-geo-inst/
+    mkdir ping-geo-inst/
+    python3 -m venv ping-geo-inst/
 
-cd ping-geo-inst/
-. bin/activate
-pip install ping-geo
-which ping-geo
-ping-geo xxx
+    cd ping-geo-inst/
+    . bin/activate
+    pip install ping-geo
+    which ping-geo
+    ping-geo xxx
