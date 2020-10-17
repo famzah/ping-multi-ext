@@ -32,3 +32,16 @@ pip install wheel
 pip install ../ping-geo/
 which ping-geo
 ping-geo xxx
+
+Test pip package from PyPi repo
+*******************************
+
+rm -r ping-geo-inst/
+mkdir ping-geo-inst/
+python3 -m venv ping-geo-inst/
+
+cd ping-geo-inst/
+. bin/activate
+pip install ping-geo
+which ping-geo
+ping-geo xxx
