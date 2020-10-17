@@ -15,7 +15,7 @@ Test pip package locally
     cd ping-geo-inst/
     . bin/activate
     pip install --upgrade pip
-    pip install wheel
+    pip install --upgrade wheel
     pip install ../ping-geo/
     which ping-geo
     ping-geo xxx
@@ -28,8 +28,8 @@ Upload package to PyPi
     . bin/activate
 
     pip install --upgrade pip
-    pip install wheel
-    pip install twine
+    pip install --upgrade wheel
+    pip install --upgrade twine
 
     python setup.py sdist
     python setup.py bdist_wheel
