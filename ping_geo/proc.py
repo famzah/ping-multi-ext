@@ -2,12 +2,15 @@ from multiprocessing import Process
 import os
 import sys
 import shlex
-import prctl
+from ctypes import cdll
 import time
 import signal
 import select
 import re
 import traceback
+
+# /usr/include/linux/prctl.h
+PR_SET_PDEATHSIG = 1
 
 class Workflow:
     def __init__(self, hosts_data):
@@ -15,7 +18,10 @@ class Workflow:
         self.hosts_data = hosts_data
 
     def child_process(self, cmdline, ppid):
-        prctl.set_pdeathsig(signal.SIGTERM) # no effect for setuid or binaries with capabilities!
+        # no effect for setuid or binaries with capabilities!
+        errno = cdll['libc.so.6'].prctl(PR_SET_PDEATHSIG, signal.SIGTERM)
+        if errno != 0:
+            raise Exception(f'prctl() failed with errno={errno}')
         if os.getppid() != ppid:
             raise Exception('Parent already terminated')
 
