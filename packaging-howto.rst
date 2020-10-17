@@ -7,6 +7,7 @@ Test pip package locally
 ************************
 
 .. code-block:: bash
+
     rm -r ping-geo-inst/
     mkdir ping-geo-inst/
     python3 -m venv ping-geo-inst/
@@ -23,6 +24,7 @@ Upload package to PyPi
 **********************
 
 .. code-block:: bash
+
     . bin/activate
 
     pip install --upgrade pip
@@ -39,6 +41,7 @@ Test pip package from PyPi repo
 *******************************
 
 .. code-block:: bash
+
     rm -r ping-geo-inst/
     mkdir ping-geo-inst/
     python3 -m venv ping-geo-inst/
