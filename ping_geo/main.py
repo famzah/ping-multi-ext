@@ -9,6 +9,7 @@ import string
 import math
 import argparse
 import ping_geo.proc
+import ping_geo # version
 
 gvars = {}
 
@@ -507,6 +508,11 @@ def parse_argv():
         help='each command must be specified by an arbitrary unique name and the command itself; ' +\
              'you can specify this option many times'
     )
+    vstr = '{} {} | {}'.format(
+        '%(prog)s', ping_geo.version,
+        'https://github.com/famzah/ping-geo'
+    )
+    parser.add_argument('--version', action='version', version=vstr)
     return parser.parse_args()
 
 def _main():
