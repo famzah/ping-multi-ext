@@ -8,7 +8,7 @@ Update version
 
 .. code-block:: bash
 
-    vi setup.py
+    vi ping_geo/__init__.py
 
 Test pip package locally
 ************************

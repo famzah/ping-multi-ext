@@ -7,9 +7,11 @@ here = pathlib.Path(__file__).parent.resolve()
 # Get the long description from the README file
 long_description = (here / 'README.rst').read_text(encoding='utf-8')
 
+import ping_geo # version
+
 setup(
     name='ping-geo',
-    version='1.0.1',
+    version=ping_geo.version,
 
     description='Interactively ping one host from multiple locations via SSH',
     long_description=long_description,
