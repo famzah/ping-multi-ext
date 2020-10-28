@@ -9,7 +9,7 @@ long_description = (here / 'README.rst').read_text(encoding='utf-8')
 
 setup(
     name='ping-geo',
-    version='1.0.0',
+    version='1.0.1',
 
     description='Interactively ping one host from multiple locations via SSH',
     long_description=long_description,
