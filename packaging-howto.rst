@@ -3,6 +3,13 @@ Documentation
 
 https://packaging.python.org/guides/distributing-packages-using-setuptools/
 
+Update version
+**************
+
+.. code-block:: bash
+
+    vi setup.py
+
 Test pip package locally
 ************************
 
