@@ -41,9 +41,15 @@ Upload package to PyPi
     python setup.py sdist
     python setup.py bdist_wheel
     rm -r build/ ping_geo.egg-info/
-    git commit ...
 
-    twine upload dist/*
+    VER="$(python -c 'import ping_geo; print(ping_geo.version)')"
+    DIST_FILES="$(find -name "ping*geo-$VER*")"
+
+    git add $DIST_FILES
+    git status
+    git commit $DIST_FILES
+
+    twine upload $DIST_FILES
 
 Test pip package from PyPi repo
 *******************************
