@@ -91,6 +91,11 @@ class Workflow:
             res = '???'
         else:
             res = m.group(1)
+            try:
+                res = float(res)
+                res = round(res)
+            except:
+                res = 'ERR' # this should never happen
 
         return '{:>4}'.format(res)
 
