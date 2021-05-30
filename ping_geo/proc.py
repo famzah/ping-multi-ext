@@ -8,14 +8,16 @@ import signal
 import select
 import re
 import traceback
+import statistics
 
 # /usr/include/linux/prctl.h
 PR_SET_PDEATHSIG = 1
 
 class Workflow:
-    def __init__(self, hosts_data):
+    def __init__(self, hosts_data, timeout):
         self.debug = False
         self.hosts_data = hosts_data
+        self.timeout = timeout
 
     def child_process(self, cmdline, ppid):
         # no effect for setuid or binaries with capabilities!
@@ -78,7 +80,7 @@ class Workflow:
         self.exited_hosts = []
         self.select_fdlist = list(self.fd_lookup.keys())
 
-    def parse_line(self, line):
+    def parse_time(self, line):
         line = line.strip()
         if not len(line):
             return None
@@ -98,6 +100,13 @@ class Workflow:
                 res = 'ERR' # this should never happen
 
         return res
+
+    def parse_seq(self, line):
+        m = re.search(r'\sicmp_seq=(\d+)(\s|$)', line)
+        if m:
+            return int(m.group(1))
+        else:
+            return None
 
     def handle_pipes(self, timeout):
         if not len(self.select_fdlist):
@@ -146,11 +155,34 @@ class Workflow:
                             print(data['raw'][-1])
 
                         if not terminated:
-                            pd = self.parse_line(data['raw'][-1])
+                            seq = self.parse_seq(data['raw'][-1])
+                            if seq is not None and seq > data['stats']['TX_cnt']:
+                                data['stats']['TX_cnt'] = seq
+
+                            pd = self.parse_time(data['raw'][-1])
+                            data['stats']['Last'] = pd
                             if pd is not None:
                                 data['parsed'].append(pd)
                                 if self.debug:
                                     print(f'PARSED: "{pd}"')
+
+                            if type(pd) is int and pd < self.timeout * 1000:
+                                data['stats']['RX_cnt'] += 1
+                            data['stats']['XX_cnt'] = \
+                                data['stats']['TX_cnt'] - data['stats']['RX_cnt']
+
+                            if data['stats']['TX_cnt'] > 0:
+                                data['stats']['Loss%'] = '{:.0f}%'.format(
+                                    (1 - data['stats']['RX_cnt'] / data['stats']['TX_cnt']) * 100
+                                )
+
+                            points = list(filter(lambda x: type(x) is int, data['parsed']))
+                            if len(points):
+                                data['stats']['StDev'] = '{:.1f}'.format(statistics.pstdev(points))
+                                data['stats']['Max'] = max(points)
+                                data['stats']['Min'] = min(points)
+                                data['stats']['Avg'] = round(sum(points) / len(points))
+                            
 
     def handle_exited_hosts(self):
         done_hostnames = []

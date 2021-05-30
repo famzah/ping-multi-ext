@@ -120,10 +120,19 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
     row_parts.append(host_id_str)
     row_parts_str_len += len(host_id_str)
 
+    stats_val = host_data['stats'][gvars['stats_show'][0]]
+    if stats_val is None:
+        stats_val = ''
+
+    stats_str = ('{:>6}  '.format(stats_val))
+    row_parts.append(stats_str)
+    row_parts_str_len += len(stats_str)
+
     s = ''
     with host_data['lock']:
         for v_idx in range(1, len(host_data['parsed']) + 1):
             raw_value = host_data['parsed'][-v_idx]
+
             if gvars['time_scale'][0] == 'success' or gvars['time_scale'][0] == 'numbered':
                 try:
                     int_v = int(raw_value)
@@ -220,6 +229,8 @@ def _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname):
     if host_data_type == 'parsed':
         first_row.extend([
             ' | ',
+            TermCtrl('bold'), 'S', TermCtrl('normal'),
+            'tats | ',
             TermCtrl('bold'), 'T', TermCtrl('normal'),
             'ime scale',
         ])
@@ -243,7 +254,8 @@ def _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname):
         screen_rows.append(
             [
                 TermCtrl('bold'),
-                ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format('Hostname')
+                ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format('Hostname'),
+                ('{:>6s}  ').format(gvars['stats_show'][0])
             ] +\
             res_header
         )
@@ -438,6 +450,10 @@ def ui_renderer(all_hosts):
                             break # mandatory restart
                         else:
                             scroller.sel_idx = None
+                    elif key == 's' and host_data_type == 'parsed':
+                        gvars['stats_show'].rotate(-1)
+                    elif key == 'S' and host_data_type == 'parsed':
+                        gvars['stats_show'].rotate(1)
                     elif key == 't' and host_data_type == 'parsed':
                         gvars['time_scale'].rotate(-1)
                     elif key == 'T' and host_data_type == 'parsed':
@@ -530,16 +546,23 @@ def populate_hosts():
                 'cmdline': cmd,
             },
             'lock': threading.Lock(),
+            'stats': {},
             'parsed': [''],
             'raw': [''],
             'raw_complete': False,
         }
+        
+        for k in gvars['stats_show']:
+            if not k.endswith('_cnt'):
+                ret[hostname]['stats'][k] = None
+            else:
+                ret[hostname]['stats'][k] = 0
 
         gvars['hosts_print_order'].append(hostname)
     return ret
 
 def update_hosts_data():
-    workflow = ping_geo.proc.Workflow(gvars['proc_data'])
+    workflow = ping_geo.proc.Workflow(gvars['proc_data'], gvars['cmd_args'].timeout)
     workflow.start_all_processes()
 
     while not gvars['stop_run']:
@@ -563,6 +586,11 @@ def parse_argv():
         help=f'ping reply timeout in seconds; default={dval}')
     parser.add_argument('--version', action='version', version=vstr)
     return parser.parse_args()
+
+def _global_pre_init():
+    gvars['stats_show'] = deque([
+        'Last', 'Loss%', 'Avg', 'Min', 'Max', 'StDev', 'RX_cnt', 'TX_cnt', 'XX_cnt',
+    ])
 
 def _main():
     gvars['term'] = Terminal()
@@ -610,5 +638,6 @@ def main():
     # This way we can easily print() anything and exit then.
     gvars['cmd_args'] = parse_argv()
     gvars['hosts_print_order'] = []
+    _global_pre_init()
     gvars['proc_data'] = populate_hosts()
     thread_runner(_main)
