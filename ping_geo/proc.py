@@ -182,7 +182,6 @@ class Workflow:
                                 data['stats']['Max'] = max(points)
                                 data['stats']['Min'] = min(points)
                                 data['stats']['Avg'] = round(sum(points) / len(points))
-                            
 
     def handle_exited_hosts(self):
         done_hostnames = []
