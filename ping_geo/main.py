@@ -10,6 +10,7 @@ import math
 import argparse
 import ping_geo.proc
 import ping_geo # version
+from collections import deque
 
 gvars = {}
 
@@ -122,7 +123,31 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
     s = ''
     with host_data['lock']:
         for v_idx in range(1, len(host_data['parsed']) + 1):
-            added_value = '{} '.format(host_data['parsed'][-v_idx])
+            raw_value = host_data['parsed'][-v_idx]
+            if gvars['time_scale'][0] == 'success' or gvars['time_scale'][0] == 'numbered':
+                try:
+                    int_v = int(raw_value)
+                except:
+                    added_value = raw_value.strip()[0:1]
+                else:
+                    if gvars['time_scale'][0] == 'success':
+                        if int_v < gvars['cmd_args'].timeout * 1000:
+                            added_value = '.'
+                        else:
+                            added_value = 'X'
+                    elif gvars['time_scale'][0] == 'numbered':
+                        if int_v < 1000:
+                            added_value = math.floor(int_v / 100)
+                        else:
+                            added_value = '-'
+                    else:
+                        raise ValueError(gvars['time_scale'][0])
+            elif gvars['time_scale'][0] == 'raw':
+                added_value = '{:>4} '.format(raw_value)
+            else:
+                raise ValueError(gvars['time_scale'][0])
+
+            added_value = str(added_value)
 
             if len(s) + len(added_value) > t_width - row_parts_str_len:
                 break
@@ -192,6 +217,13 @@ def _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname):
             TermCtrl('bold'), 'ESC', TermCtrl('normal'),
         ])
 
+    if host_data_type == 'parsed':
+        first_row.extend([
+            ' | ',
+            TermCtrl('bold'), 'T', TermCtrl('normal'),
+            'ime scale',
+        ])
+
     first_row.extend([
         ' | ',
         TermCtrl('bold'), 'Q', TermCtrl('normal'), 'uit',
@@ -200,11 +232,21 @@ def _ui_render_header(screen_rows, cmd_err, host_data_type, sel_hostname):
     screen_rows.append(first_row)
 
     if host_data_type == 'parsed':
-        screen_rows.append([
-            TermCtrl('bold'),
-            ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format('Hostname'),
-            'Ping results', TermCtrl('normal'), ' (newest first)',
-        ])
+        if gvars['time_scale'][0] == 'success':
+            res_header = ['Ping results', TermCtrl('normal'), ' (success, newest first)']
+        elif gvars['time_scale'][0] == 'numbered':
+            res_header = ['Ping results', TermCtrl('normal'), ' (scaled per 100 ms, newest first)']
+        elif gvars['time_scale'][0] == 'raw':
+            res_header = ['Ping results', TermCtrl('normal'), ' (RTT, newest first)']
+        else:
+            raise ValueError(gvars['time_scale'][0])
+        screen_rows.append(
+            [
+                TermCtrl('bold'),
+                ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format('Hostname')
+            ] +\
+            res_header
+        )
     elif host_data_type == 'raw':
         screen_rows.append([TermCtrl('bold'), f'Raw ping results for "{sel_hostname}"'])
     else:
@@ -396,6 +438,10 @@ def ui_renderer(all_hosts):
                             break # mandatory restart
                         else:
                             scroller.sel_idx = None
+                    elif key == 't' and host_data_type == 'parsed':
+                        gvars['time_scale'].rotate(-1)
+                    elif key == 'T' and host_data_type == 'parsed':
+                        gvars['time_scale'].rotate(1)
                     elif key.lower() == 'q':
                         gvars['stop_run'] = True
                     else:
@@ -512,6 +558,9 @@ def parse_argv():
         '%(prog)s', ping_geo.version,
         'https://github.com/famzah/ping-geo'
     )
+    dval = 1
+    parser.add_argument('--timeout', type=float, default=dval,
+        help=f'ping reply timeout in seconds; default={dval}')
     parser.add_argument('--version', action='version', version=vstr)
     return parser.parse_args()
 
@@ -525,6 +574,8 @@ def _main():
 
     gvars['exited_fullscreen'] = True # by default we're not in this mode
     gvars['exit_fullscreen_lock'] = threading.Lock()
+
+    gvars['time_scale'] = deque(['success', 'raw', 'numbered'])
 
     gvars['config'] = {
         'max_host_id_len': 16,
