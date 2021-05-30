@@ -11,6 +11,7 @@ import argparse
 import ping_geo.proc
 import ping_geo # version
 from collections import deque
+import os
 
 gvars = {}
 
@@ -544,6 +545,7 @@ def populate_hosts():
         ret[hostname] = {
             'proc': {
                 'cmdline': cmd,
+                'pid': None,
             },
             'lock': threading.Lock(),
             'stats': {},
@@ -632,6 +634,14 @@ def _main():
             if thr.is_alive():
                 thr.join()
         time.sleep(0.05)
+
+    for host_data in gvars['proc_data'].values():
+        if not host_data['proc']['pid']:
+            continue
+        try:
+            os.kill(host_data['proc']['pid'], signal.SIGTERM)
+        except ProcessLookupError:
+            pass
 
 def main():
     # Execute before we get into fullscreen mode.

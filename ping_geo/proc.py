@@ -200,6 +200,7 @@ class Workflow:
                 term_reason = f'killed by signal {einfo.si_status}' # (si_code={einfo.si_code})
 
             with data['lock']:
+                data['proc']['pid'] = None
                 data['raw'].append(f'== Process {term_reason}')
                 data['parsed'].append('EXIT')
                 if self.debug:
