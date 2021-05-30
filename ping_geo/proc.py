@@ -97,7 +97,7 @@ class Workflow:
             except:
                 res = 'ERR' # this should never happen
 
-        return '{:>4}'.format(res)
+        return res
 
     def handle_pipes(self, timeout):
         if not len(self.select_fdlist):
