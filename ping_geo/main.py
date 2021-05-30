@@ -121,16 +121,16 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
     row_parts.append(host_id_str)
     row_parts_str_len += len(host_id_str)
 
-    stats_val = host_data['stats'][gvars['stats_show'][0]]
-    if stats_val is None:
-        stats_val = ''
-
-    stats_str = ('{:>6}  '.format(stats_val))
-    row_parts.append(stats_str)
-    row_parts_str_len += len(stats_str)
-
     s = ''
     with host_data['lock']:
+        stats_val = host_data['stats'][gvars['stats_show'][0]]
+        if stats_val is None:
+            stats_val = ''
+
+        stats_str = ('{:>6}  '.format(stats_val))
+        row_parts.append(stats_str)
+        row_parts_str_len += len(stats_str)
+
         for v_idx in range(1, len(host_data['parsed']) + 1):
             raw_value = host_data['parsed'][-v_idx]
 
