@@ -144,14 +144,19 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
                         else:
                             added_value = 'X'
                     elif gvars['time_scale'][0] == 'numbered':
-                        if int_v < 1000:
+                        if int_v < 1000 and int_v < gvars['cmd_args']['timeout'] * 1000:
                             added_value = math.floor(int_v / 100)
                         else:
                             added_value = '-'
                     else:
                         raise ValueError(gvars['time_scale'][0])
             elif gvars['time_scale'][0] == 'raw':
-                added_value = '{:>4} '.format(raw_value)
+                if type(raw_value) is int and raw_value >= gvars['cmd_args']['timeout'] * 1000:
+                    added_value = '*'
+                else:
+                    added_value = raw_value
+
+                added_value = '{:>4} '.format(added_value)
             else:
                 raise ValueError(gvars['time_scale'][0])
 
