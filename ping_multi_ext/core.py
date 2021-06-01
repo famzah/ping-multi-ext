@@ -137,6 +137,11 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
                     int_v = int(raw_value)
                 except:
                     added_value = raw_value.strip()[0:1]
+                    if added_value == '*': # timeout
+                        if gvars['time_scale'][0] == 'success':
+                            added_value = 'X' # use the same symbol
+                        if gvars['time_scale'][0] == 'numbered':
+                            added_value = '-' # use the same symbol
                 else:
                     if gvars['time_scale'][0] == 'success':
                         if int_v < gvars['cmd_args']['timeout'] * 1000:
