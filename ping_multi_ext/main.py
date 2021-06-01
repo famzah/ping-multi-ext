@@ -570,9 +570,9 @@ def update_hosts_data():
     while not gvars['stop_run']:
         workflow.update_hosts_data(0.05)
 
-def argv_parser_base():
+def argv_parser_base(prog_desc):
     parser = argparse.ArgumentParser(
-        description='Execute multiple external ping commands at once'
+        description=prog_desc
     )
     vstr = '{} {} | {}'.format(
         '%(prog)s', ping_multi_ext.version,

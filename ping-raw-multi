@@ -3,7 +3,9 @@
 import ping_multi_ext.main
 
 def parse_argv():
-    parser = ping_multi_ext.main.argv_parser_base()
+    parser = ping_multi_ext.main.argv_parser_base(
+        'Execute multiple external ping commands at once.'
+    )
 
     # non-required first
 
