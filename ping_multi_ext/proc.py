@@ -162,6 +162,11 @@ class Workflow:
 
                             if seq is not None:
                                 if data['seen_rx_seq'].get(seq):
+                                    pd = self.parse_time(data['raw'][-1])
+                                    if pd:
+                                        # display the raw "time" value in the "Last" stats
+                                        # even if it was marked as a timeout already
+                                        data['stats']['Last'] = pd
                                     continue # we have already handled this "seq"
                                 else:
                                     data['seen_rx_seq'][seq] = True
