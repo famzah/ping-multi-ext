@@ -86,7 +86,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'ping-multi-ext=ping_multi_ext.main:main',
+            'ping-raw-multi=ping_multi_ext.cmd_raw:main',
         ],
     },
 
