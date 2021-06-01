@@ -12,6 +12,7 @@ import ping_multi_ext.proc
 import ping_multi_ext # version
 from collections import deque
 import os
+import shlex
 
 gvars = {}
 
@@ -581,6 +582,12 @@ def argv_parser_base(prog_desc):
     parser.add_argument('--version', action='version', version=vstr)
 
     return parser
+
+def compose_ping_cmd(host, cmd_args):
+    return 'ping -O -i {} {}'.format(
+        shlex.quote(str(cmd_args['interval'])),
+        shlex.quote(host)
+    )
 
 def _global_pre_init():
     gvars['stats_show'] = deque([
