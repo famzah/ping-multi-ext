@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
 
-import ping_geo.main
+import ping_multi_ext.main
 
-ping_geo.main.main()
+ping_multi_ext.main.main()

@@ -7,16 +7,16 @@ here = pathlib.Path(__file__).parent.resolve()
 # Get the long description from the README file
 long_description = (here / 'README.rst').read_text(encoding='utf-8')
 
-import ping_geo # version
+import ping_multi_ext # version
 
 setup(
-    name='ping-geo',
-    version=ping_geo.version,
+    name='ping-multi-ext',
+    version=ping_multi_ext.version,
 
     description='Interactively ping one host from multiple locations via SSH',
     long_description=long_description,
     long_description_content_type='text/x-rst',
-    url='https://github.com/famzah/ping-geo',
+    url='https://github.com/famzah/ping-multi-ext',
 
     author='Ivan Zahariev (famzah)',
     #author_email='author@example.com',  # Optional
@@ -56,7 +56,7 @@ setup(
     #   py_modules=["my_module"],
     #
     #packages=find_packages(where='src'),  # Required
-    packages=['ping_geo'],
+    packages=['ping_multi_ext'],
 
     python_requires='>=3.6, <4',
     install_requires=['blessings', 'curtsies'],
@@ -86,12 +86,12 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'ping-geo=ping_geo.main:main',
+            'ping-multi-ext=ping_multi_ext.main:main',
         ],
     },
 
     project_urls={
-        'Bug Reports': 'https://github.com/famzah/ping-geo/issues',
-        'Source': 'https://github.com/famzah/ping-geo',
+        'Bug Reports': 'https://github.com/famzah/ping-multi-ext/issues',
+        'Source': 'https://github.com/famzah/ping-multi-ext',
     },
 )

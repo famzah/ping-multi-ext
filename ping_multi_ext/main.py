@@ -8,8 +8,8 @@ import random
 import string
 import math
 import argparse
-import ping_geo.proc
-import ping_geo # version
+import ping_multi_ext.proc
+import ping_multi_ext # version
 from collections import deque
 import os
 
@@ -564,7 +564,7 @@ def populate_hosts():
     return ret
 
 def update_hosts_data():
-    workflow = ping_geo.proc.Workflow(gvars['proc_data'], gvars['cmd_args'].timeout)
+    workflow = ping_multi_ext.proc.Workflow(gvars['proc_data'], gvars['cmd_args'].timeout)
     workflow.start_all_processes()
 
     while not gvars['stop_run']:
@@ -580,8 +580,8 @@ def parse_argv():
              'you can specify this option many times'
     )
     vstr = '{} {} | {}'.format(
-        '%(prog)s', ping_geo.version,
-        'https://github.com/famzah/ping-geo'
+        '%(prog)s', ping_multi_ext.version,
+        'https://github.com/famzah/ping-multi-ext'
     )
     dval = 1
     parser.add_argument('--timeout', type=float, default=dval,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import ping_geo.proc
+import ping_multi_ext.proc
 import threading
 
 hosts_data = {
@@ -33,7 +33,7 @@ hosts_data = {
     },
 }
 
-workflow = ping_geo.proc.Workflow(hosts_data)
+workflow = ping_multi_ext.proc.Workflow(hosts_data)
 workflow.debug = True
 workflow.start_all_processes()
 while True:

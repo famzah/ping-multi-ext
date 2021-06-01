@@ -8,24 +8,24 @@ Update version
 
 .. code-block:: bash
 
-    vi ping_geo/__init__.py
+    vi ping_multi_ext/__init__.py
 
 Test pip package locally
 ************************
 
 .. code-block:: bash
 
-    rm -r ping-geo-inst/
-    mkdir ping-geo-inst/
-    python3 -m venv ping-geo-inst/
+    rm -r ping-multi-ext-inst/
+    mkdir ping-multi-ext-inst/
+    python3 -m venv ping-multi-ext-inst/
 
-    cd ping-geo-inst/
+    cd ping-multi-ext-inst/
     . bin/activate
     pip install --upgrade pip
     pip install --upgrade wheel
-    pip install ../ping-geo/
-    which ping-geo
-    ping-geo xxx
+    pip install ../ping-multi-ext/
+    which ping-multi-ext
+    ping-multi-ext xxx
 
 Upload package to PyPi
 **********************
@@ -40,9 +40,9 @@ Upload package to PyPi
 
     python setup.py sdist
     python setup.py bdist_wheel
-    rm -r build/ ping_geo.egg-info/
+    rm -r build/ ping_multi_ext.egg-info/
 
-    VER="$(python -c 'import ping_geo; print(ping_geo.version)')"
+    VER="$(python -c 'import ping_multi_ext; print(ping_multi_ext.version)')"
     DIST_FILES="$(find -name "ping*geo-$VER*")"
 
     git add $DIST_FILES
@@ -56,12 +56,12 @@ Test pip package from PyPi repo
 
 .. code-block:: bash
 
-    rm -r ping-geo-inst/
-    mkdir ping-geo-inst/
-    python3 -m venv ping-geo-inst/
+    rm -r ping-multi-ext-inst/
+    mkdir ping-multi-ext-inst/
+    python3 -m venv ping-multi-ext-inst/
 
-    cd ping-geo-inst/
+    cd ping-multi-ext-inst/
     . bin/activate
-    pip install ping-geo
-    which ping-geo
-    ping-geo xxx
+    pip install ping-multi-ext
+    which ping-multi-ext
+    ping-multi-ext xxx
