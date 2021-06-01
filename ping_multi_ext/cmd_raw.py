@@ -19,7 +19,7 @@ def parse_argv():
              'you can specify this option many times'
     )
 
-    return parser.parse_args()
+    return vars(parser.parse_args())
 
 def main():
     ping_multi_ext.core.main(parse_argv())

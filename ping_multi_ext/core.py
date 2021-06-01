@@ -141,7 +141,7 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
                     added_value = raw_value.strip()[0:1]
                 else:
                     if gvars['time_scale'][0] == 'success':
-                        if int_v < gvars['cmd_args'].timeout * 1000:
+                        if int_v < gvars['cmd_args']['timeout'] * 1000:
                             added_value = '.'
                         else:
                             added_value = 'X'
@@ -537,7 +537,7 @@ def sigint_handler(a, b):
 
 def populate_hosts():
     ret = {}
-    for hostname, cmd in gvars['cmd_args'].ping:
+    for hostname, cmd in gvars['cmd_args']['ping']:
         if hostname in ret:
             print(f'Error: Duplicate unique name: {hostname}', file=sys.stderr, flush=True)
             sys.exit(1)
@@ -564,7 +564,7 @@ def populate_hosts():
     return ret
 
 def update_hosts_data():
-    workflow = ping_multi_ext.proc.Workflow(gvars['proc_data'], gvars['cmd_args'].timeout)
+    workflow = ping_multi_ext.proc.Workflow(gvars['proc_data'], gvars['cmd_args']['timeout'])
     workflow.start_all_processes()
 
     while not gvars['stop_run']:
