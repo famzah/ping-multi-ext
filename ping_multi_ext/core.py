@@ -7,12 +7,9 @@ import signal
 import random
 import string
 import math
-import argparse
 import ping_multi_ext.proc
-import ping_multi_ext # version
 from collections import deque
 import os
-import shlex
 
 gvars = {}
 
@@ -570,24 +567,6 @@ def update_hosts_data():
 
     while not gvars['stop_run']:
         workflow.update_hosts_data(0.05)
-
-def argv_parser_base(prog_desc):
-    parser = argparse.ArgumentParser(
-        description=prog_desc
-    )
-    vstr = '{} {} | {}'.format(
-        '%(prog)s', ping_multi_ext.version,
-        'https://github.com/famzah/ping-multi-ext'
-    )
-    parser.add_argument('--version', action='version', version=vstr)
-
-    return parser
-
-def compose_ping_cmd(host, cmd_args):
-    return 'ping -O -i {} {}'.format(
-        shlex.quote(str(cmd_args['interval'])),
-        shlex.quote(host)
-    )
 
 def _global_pre_init():
     gvars['stats_show'] = deque([
