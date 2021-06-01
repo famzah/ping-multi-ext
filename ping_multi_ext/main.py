@@ -570,23 +570,30 @@ def update_hosts_data():
     while not gvars['stop_run']:
         workflow.update_hosts_data(0.05)
 
-def parse_argv():
+def argv_parser_base():
     parser = argparse.ArgumentParser(
         description='Execute multiple external ping commands at once'
-    )
-    parser.add_argument('--ping', nargs=2, metavar=('UNIQUE_NAME', 'COMMAND'),
-        action='append', required=True,
-        help='each command must be specified by an arbitrary unique name and the command itself; ' +\
-             'you can specify this option many times'
     )
     vstr = '{} {} | {}'.format(
         '%(prog)s', ping_multi_ext.version,
         'https://github.com/famzah/ping-multi-ext'
     )
+    parser.add_argument('--version', action='version', version=vstr)
+
+    return parser
+
+def parse_argv():
+    parser = argv_parser_base()
+
+    parser.add_argument('--ping', nargs=2, metavar=('UNIQUE_NAME', 'COMMAND'),
+        action='append', required=True,
+        help='each command must be specified by an arbitrary unique name and the command itself; ' +\
+             'you can specify this option many times'
+    )
     dval = 1
     parser.add_argument('--timeout', type=float, default=dval,
         help=f'ping reply timeout in seconds; default={dval}')
-    parser.add_argument('--version', action='version', version=vstr)
+
     return parser.parse_args()
 
 def _global_pre_init():
