@@ -15,7 +15,8 @@ def argv_parser_base(prog_desc):
     return parser
 
 def compose_ping_cmd(host, cmd_args):
-    return 'ping -O -i {} {}'.format(
+    return 'ping -O -W {} -i {} {}'.format(
+        shlex.quote(str(cmd_args['wait'])),
         shlex.quote(str(cmd_args['interval'])),
         shlex.quote(host)
     )
