@@ -108,6 +108,9 @@ class Workflow:
         else:
             return None
 
+    def parse_timeout(self, line):
+        return re.search(r'^no answer yet for icmp_seq=\d+$', line)
+
     def handle_pipes(self, timeout):
         if not len(self.select_fdlist):
             time.sleep(0.05)
@@ -156,10 +159,23 @@ class Workflow:
 
                         if not terminated:
                             seq = self.parse_seq(data['raw'][-1])
+
+                            if seq is not None:
+                                if data['seen_rx_seq'].get(seq):
+                                    continue # we have already handled this "seq"
+                                else:
+                                    data['seen_rx_seq'][seq] = True
+
                             if seq is not None and seq > data['stats']['TX_cnt']:
                                 data['stats']['TX_cnt'] = seq
 
-                            pd = self.parse_time(data['raw'][-1])
+                            is_timeout = self.parse_timeout(data['raw'][-1])
+
+                            if is_timeout:
+                                pd = '*'
+                            else:
+                                pd = self.parse_time(data['raw'][-1])
+
                             data['stats']['Last'] = pd
                             if pd is not None:
                                 data['parsed'].append(pd)

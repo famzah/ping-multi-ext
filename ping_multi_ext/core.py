@@ -555,6 +555,7 @@ def populate_hosts():
             'parsed': [''],
             'raw': [''],
             'raw_complete': False,
+            'seen_rx_seq': {},
         }
         
         for k in gvars['stats_show']:
