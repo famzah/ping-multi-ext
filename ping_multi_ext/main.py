@@ -582,20 +582,6 @@ def argv_parser_base():
 
     return parser
 
-def parse_argv():
-    parser = argv_parser_base()
-
-    parser.add_argument('--ping', nargs=2, metavar=('UNIQUE_NAME', 'COMMAND'),
-        action='append', required=True,
-        help='each command must be specified by an arbitrary unique name and the command itself; ' +\
-             'you can specify this option many times'
-    )
-    dval = 1
-    parser.add_argument('--timeout', type=float, default=dval,
-        help=f'ping reply timeout in seconds; default={dval}')
-
-    return parser.parse_args()
-
 def _global_pre_init():
     gvars['stats_show'] = deque([
         'Last', 'Loss%', 'Avg', 'Min', 'Max', 'StDev', 'RX_cnt', 'TX_cnt', 'XX_cnt',
@@ -650,10 +636,10 @@ def _main():
         except ProcessLookupError:
             pass
 
-def main():
+def main(cmd_args):
     # Execute before we get into fullscreen mode.
     # This way we can easily print() anything and exit then.
-    gvars['cmd_args'] = parse_argv()
+    gvars['cmd_args'] = cmd_args
     gvars['hosts_print_order'] = []
     _global_pre_init()
     gvars['proc_data'] = populate_hosts()
