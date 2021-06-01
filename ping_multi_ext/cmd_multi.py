@@ -22,6 +22,11 @@ def parse_argv():
 
     args = vars(parser.parse_args())
 
+    if args['wait'] > args['interval']:
+        parser.error('Argument "--wait={:.1f}" cannot be bigger than "--interval={:.1f}"'.format(
+            args['wait'], args['interval']
+        ))
+
     hosts = args['host'].copy()
 
     if args['file'] is not None:
