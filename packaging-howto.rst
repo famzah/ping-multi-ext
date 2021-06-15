@@ -50,11 +50,13 @@ Upload package to PyPi
     VER="$(python -c 'import ping_multi_ext; print(ping_multi_ext.version)')"
     DIST_FILES="$(find -name "ping?multi?ext-$VER*")"
 
+    twine check $DIST_FILES
+    twine upload $DIST_FILES
+
     git add $DIST_FILES
     git status
     git commit $DIST_FILES
-
-    twine upload $DIST_FILES
+    git push
 
 Test pip package from PyPi repo
 *******************************
