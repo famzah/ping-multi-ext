@@ -28,6 +28,8 @@ Test pip package locally
     pip -qq install --upgrade pip wheel
     pip -qq install "$PKG_GIT_PATH"
 
+    # keep the following instructions in-sync with "Test pip package from PyPi repo"
+
     which ping-multi | grep -q "$(pwd)/bin/" || echo ERROR
     which ping-raw-multi | grep -q "$(pwd)/bin/" || echo ERROR
 
@@ -63,12 +65,22 @@ Test pip package from PyPi repo
 
 .. code-block:: bash
 
-    rm -r ping-multi-ext-inst/
+    export PKG_GIT_PATH=xxx/ping-multi-ext
+    export REMOTE_HOST=xxx
+
+    cd /tmp
+    rm -rf ping-multi-ext-inst/
     mkdir ping-multi-ext-inst/
     python3 -m venv ping-multi-ext-inst/
 
     cd ping-multi-ext-inst/
     . bin/activate
     pip install ping-multi-ext
-    which ping-multi-ext
-    ping-multi-ext xxx
+
+    # keep the following instructions in-sync with "Test pip package locally"
+
+    which ping-multi | grep -q "$(pwd)/bin/" || echo ERROR
+    which ping-raw-multi | grep -q "$(pwd)/bin/" || echo ERROR
+
+    ping-multi google.com "google.com@$REMOTE_HOST"
+    ping-raw-multi --ping google.com@local 'ping google.com' --ping google.com@remote "ssh root@$REMOTE_HOST ping google.com"
