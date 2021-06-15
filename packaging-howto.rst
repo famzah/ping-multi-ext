@@ -41,16 +41,14 @@ Upload package to PyPi
 
     . bin/activate
 
-    pip install --upgrade pip
-    pip install --upgrade wheel
-    pip install --upgrade twine
+    pip -qq install --upgrade pip wheel twine
 
-    python setup.py sdist
-    python setup.py bdist_wheel
+    python setup.py sdist >/dev/null
+    python setup.py bdist_wheel >/dev/null
     rm -r build/ ping_multi_ext.egg-info/
 
     VER="$(python -c 'import ping_multi_ext; print(ping_multi_ext.version)')"
-    DIST_FILES="$(find -name "ping*geo-$VER*")"
+    DIST_FILES="$(find -name "ping?multi?ext-$VER*")"
 
     git add $DIST_FILES
     git status
