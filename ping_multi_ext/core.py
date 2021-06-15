@@ -569,11 +569,17 @@ def populate_hosts():
             else:
                 ret[hostname]['stats'][k] = 0
 
-        if gvars['config']['auto_max_host_id_len']:
-            if len(hostname) > gvars['config']['max_host_id_len']:
-                gvars['config']['max_host_id_len'] = len(hostname)
-
         gvars['hosts_print_order'].append(hostname)
+
+    max_hostname_len = len(max(gvars['hosts_print_order'], key=len))
+
+    if gvars['config']['auto_max_host_id_len']: # fit as much as needed
+        gvars['config']['max_host_id_len'] = max_hostname_len
+    else:
+        if max_hostname_len < gvars['config']['max_host_id_len']:
+            # max len is within limits, so shrink limits
+            gvars['config']['max_host_id_len'] = max_hostname_len
+
     return ret
 
 def update_hosts_data():
@@ -592,6 +598,10 @@ def _global_pre_init():
         'auto_max_host_id_len': True,
         'max_host_id_len': 0,
     }
+
+    if gvars['cmd_args']['hosts_max_width'] > 0:
+        gvars['config']['auto_max_host_id_len'] = False
+        gvars['config']['max_host_id_len'] = gvars['cmd_args']['hosts_max_width']
 
 def _main():
     gvars['term'] = Terminal()
