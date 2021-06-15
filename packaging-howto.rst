@@ -15,6 +15,9 @@ Test pip package locally
 
 .. code-block:: bash
 
+    export PKG_GIT_PATH=xxx/ping-multi-ext
+    export REMOTE_HOST=xxx
+
     cd /tmp
     rm -rf ping-multi-ext-inst/
     mkdir ping-multi-ext-inst/
@@ -24,12 +27,11 @@ Test pip package locally
     . bin/activate
     pip -qq install --upgrade pip
     pip -qq install --upgrade wheel
-    pip -qq install ../ping-multi-ext/
+    pip -qq install "$PKG_GIT_PATH"
 
     which ping-multi | grep -q "$(pwd)/bin/" || echo ERROR
     which ping-raw-multi | grep -q "$(pwd)/bin/" || echo ERROR
 
-    export REMOTE_HOST=xxx
     ping-multi google.com "google.com@$REMOTE_HOST"
     ping-raw-multi --ping google.com@local 'ping google.com' --ping google.com@remote "ssh root@$REMOTE_HOST ping google.com"
 
