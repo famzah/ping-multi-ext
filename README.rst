@@ -28,3 +28,6 @@ The interactive UI interface lets you visualize the **RTT summary** in three mod
 
 You also have the option to review each host's "ping" command **raw output**.
 The **full history** is kept and you can navigate using the keys PgUp/PgDn/Home/End.
+
+No "root" privileges are required because for each host
+an external process is started which uses the standard "ping" command.
