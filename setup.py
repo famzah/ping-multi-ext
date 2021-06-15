@@ -13,7 +13,7 @@ setup(
     name='ping-multi-ext',
     version=ping_multi_ext.version,
 
-    description='Interactively ping one host from multiple locations via SSH',
+    description='Interactively ping one or many hosts from one or multiple locations (locally or via SSH)',
     long_description=long_description,
     long_description_content_type='text/x-rst',
     url='https://github.com/famzah/ping-multi-ext',
