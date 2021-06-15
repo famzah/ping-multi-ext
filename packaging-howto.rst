@@ -15,6 +15,7 @@ Test pip package locally
 
 .. code-block:: bash
 
+    cd /tmp
     rm -rf ping-multi-ext-inst/
     mkdir ping-multi-ext-inst/
     python3 -m venv ping-multi-ext-inst/
