@@ -75,7 +75,7 @@ Test pip package from PyPi repo
 
     cd ping-multi-ext-inst/
     . bin/activate
-    pip install ping-multi-ext
+    pip install --no-cache-dir ping-multi-ext
 
     # keep the following instructions in-sync with "Test pip package locally"
 
