@@ -14,10 +14,27 @@ def argv_parser_base(prog_desc):
 
     return parser
 
+def remove_ssh_user(host):
+    parts = host.split('@', 2)
+    
+    if len(parts) == 3:
+        parts.pop(1)
+
+    return '@'.join(parts)
+
 def compose_ping_cmd(host, cmd_args):
-    return 'ping -O -W {} -i {} {}'.format(
+    parts = host.split('@', 1)
+
+    ping_cmd = 'ping -O -W {} -i {} {}'.format(
         shlex.quote(str(cmd_args['wait'])),
         shlex.quote(str(cmd_args['interval'])),
-        shlex.quote(host)
+        shlex.quote(parts[0])
     )
 
+    if len(parts) > 1:
+        return 'ssh -o BatchMode=yes {} {}'.format(
+            shlex.quote(parts[1]),
+            shlex.quote(ping_cmd)
+        )
+    else:
+        return ping_cmd

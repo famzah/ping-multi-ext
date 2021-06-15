@@ -45,7 +45,7 @@ def parse_argv():
     ping_args = []
     for host in hosts:
         ping_args.append((
-            host,
+            ping_multi_ext.lib.remove_ssh_user(host),
             ping_multi_ext.lib.compose_ping_cmd(host, args),
         ))
 
