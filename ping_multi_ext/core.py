@@ -569,6 +569,10 @@ def populate_hosts():
             else:
                 ret[hostname]['stats'][k] = 0
 
+        if gvars['config']['auto_max_host_id_len']:
+            if len(hostname) > gvars['config']['max_host_id_len']:
+                gvars['config']['max_host_id_len'] = len(hostname)
+
         gvars['hosts_print_order'].append(hostname)
     return ret
 
@@ -584,6 +588,11 @@ def _global_pre_init():
         'Last', 'Loss%', 'Avg', 'Min', 'Max', 'StDev', 'RX_cnt', 'TX_cnt', 'XX_cnt',
     ])
 
+    gvars['config'] = {
+        'auto_max_host_id_len': True,
+        'max_host_id_len': 0,
+    }
+
 def _main():
     gvars['term'] = Terminal()
 
@@ -596,10 +605,6 @@ def _main():
     gvars['exit_fullscreen_lock'] = threading.Lock()
 
     gvars['time_scale'] = deque(['success', 'raw', 'numbered'])
-
-    gvars['config'] = {
-        'max_host_id_len': 16,
-    }
 
     gvars['ui_renderer_thread'] = threading.Thread(name='ui_renderer', target=thread_runner, args=(
         ui_renderer, gvars['proc_data']
