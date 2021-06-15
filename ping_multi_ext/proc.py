@@ -85,7 +85,7 @@ class Workflow:
         if not len(line):
             return None
 
-        if re.search(r'^PING\s.+bytes of data', line):
+        if re.search(r'^PING\s.+((bytes of data)|(data bytes))', line):
             return None
 
         m = re.search(r'^\d+\sbytes\sfrom\s.+\sttl=\d+\s+time=([\d\.]+)\sms$', line)
