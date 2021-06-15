@@ -25,8 +25,7 @@ Test pip package locally
 
     cd ping-multi-ext-inst/
     . bin/activate
-    pip -qq install --upgrade pip
-    pip -qq install --upgrade wheel
+    pip -qq install --upgrade pip wheel
     pip -qq install "$PKG_GIT_PATH"
 
     which ping-multi | grep -q "$(pwd)/bin/" || echo ERROR
