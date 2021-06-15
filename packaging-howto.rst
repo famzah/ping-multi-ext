@@ -15,17 +15,22 @@ Test pip package locally
 
 .. code-block:: bash
 
-    rm -r ping-multi-ext-inst/
+    rm -rf ping-multi-ext-inst/
     mkdir ping-multi-ext-inst/
     python3 -m venv ping-multi-ext-inst/
 
     cd ping-multi-ext-inst/
     . bin/activate
-    pip install --upgrade pip
-    pip install --upgrade wheel
-    pip install ../ping-multi-ext/
-    which ping-multi-ext
-    ping-multi-ext xxx
+    pip -qq install --upgrade pip
+    pip -qq install --upgrade wheel
+    pip -qq install ../ping-multi-ext/
+
+    which ping-multi | grep -q "$(pwd)/bin/" || echo ERROR
+    which ping-raw-multi | grep -q "$(pwd)/bin/" || echo ERROR
+
+    export REMOTE_HOST=xxx
+    ping-multi google.com "google.com@$REMOTE_HOST"
+    ping-raw-multi --ping google.com@local 'ping google.com' --ping google.com@remote "ssh root@$REMOTE_HOST ping google.com"
 
 Upload package to PyPi
 **********************
