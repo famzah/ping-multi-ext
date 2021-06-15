@@ -3,9 +3,9 @@ ping-multi-ext
 
 This tool lets you interactively ping:
 
-* one host from multiple locations (via SSH)
-* multiple hosts from one location (local machine, or remote via SSH)
-* multiple hosts from multiple locations (via SSH)
+* One host from multiple locations (via SSH)
+* Multiple hosts from one location (local machine, or remote via SSH)
+* Multiple hosts from multiple locations (via SSH)
 
 The ping results are summarized in real-time and you can
 also observe the following statistics:
@@ -21,9 +21,9 @@ also observe the following statistics:
 
 The interactive UI interface lets you visualize the RTT summary in three modes:
 
-* successful vs. unsuccessful PING replies
-* the RTT values (ping time) as a number
-* scaled per 100 ms where "0" means an RTT between 0 and 99 ms,
+* Successful vs. unsuccessful PING replies
+* The RTT values (ping time) as a number
+* Scaled per 100 ms where "0" means an RTT between 0 and 99 ms,
   "1" means an RTT between 100 and 199 ms, and so on
 
 You also have the option to review each host's "ping" command raw output.
