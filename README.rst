@@ -7,6 +7,17 @@ This tool lets you interactively ping:
 * **Multiple** hosts from **one** location (local machine, or remote via SSH)
 * **Multiple** hosts from **multiple** locations (via SSH)
 
+Screenshots
+***********
+
+The main screen:
+
+.. image:: https://raw.githubusercontent.com/famzah/ping-multi-ext/main/screenshots/main-screen.jpg
+
+Full history of the "ping" raw output for a selected host:
+
+.. image:: https://raw.githubusercontent.com/famzah/ping-multi-ext/main/screenshots/full-history-ping-output.jpg
+
 Description
 ***********
 
