@@ -160,9 +160,12 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
                     else:
                         raise ValueError(gvars['time_scale'][0])
             elif gvars['time_scale'][0] == 'raw':
-                if type(raw_value) is int and raw_value >= gvars['cmd_args']['timeout'] * 1000:
-                    added_value = '*'
-                else:
+                if type(raw_value) is int:
+                    if raw_value >= gvars['cmd_args']['timeout'] * 1000:
+                        added_value = '*' # timeout
+                    else:
+                        added_value = raw_value # normal value
+                else: # non-int, which is an error
                     added_value = raw_value
 
                 added_value = '{:>4} '.format(added_value)
