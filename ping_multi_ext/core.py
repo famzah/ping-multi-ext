@@ -580,6 +580,9 @@ def populate_hosts():
             # max len is within limits, so shrink limits
             gvars['config']['max_host_id_len'] = max_hostname_len
 
+    if gvars['config']['max_host_id_len'] < len('Hostname'):
+        gvars['config']['max_host_id_len'] = len('Hostname')
+
     return ret
 
 def update_hosts_data():
