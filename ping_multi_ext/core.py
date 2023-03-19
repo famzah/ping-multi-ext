@@ -106,6 +106,58 @@ def ui_print(term, data):
 
     return term_size_changed, t_height, t_width
 
+def _get_display_value(raw_value):
+    value_meta = set()
+    if gvars['time_scale'][0] == 'success' or gvars['time_scale'][0] == 'numbered':
+        try:
+            int_v = int(raw_value)
+        except:
+            value_meta.add('error')
+            added_value = raw_value.strip()[0:1] # get only the first character
+            if added_value == '*': # timeout
+                value_meta.add('timeout')
+                if gvars['time_scale'][0] == 'success':
+                    added_value = 'X'
+                if gvars['time_scale'][0] == 'numbered':
+                    added_value = '-'
+            else:
+                pass # use the symbol without modifications
+        else:
+            if gvars['time_scale'][0] == 'success':
+                if int_v < gvars['cmd_args']['timeout'] * 1000:
+                    added_value = '.'
+                else:
+                    added_value = 'X'
+                    value_meta.add('timeout')
+            elif gvars['time_scale'][0] == 'numbered':
+                if int_v >= gvars['cmd_args']['timeout'] * 1000:
+                    added_value = '-' # timeout
+                    value_meta.add('timeout')
+                elif int_v < 1000:
+                    added_value = math.floor(int_v / 100)
+                else:
+                    added_value = '>' # unable to visualize with 0..9
+            else:
+                raise ValueError(gvars['time_scale'][0])
+    elif gvars['time_scale'][0] == 'raw':
+        if type(raw_value) is int:
+            if raw_value >= gvars['cmd_args']['timeout'] * 1000:
+                added_value = '*' # timeout
+                value_meta.add('timeout')
+            else:
+                added_value = raw_value # normal value
+        else: # non-int, which is an error
+            added_value = raw_value
+            value_meta.add('error')
+
+        added_value = '{:>4} '.format(added_value)
+    else:
+        raise ValueError(gvars['time_scale'][0])
+
+    added_value = str(added_value)
+
+    return (added_value, value_meta)
+
 def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
     row_parts = []
     row_parts_str_len = 0
@@ -130,49 +182,7 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
         row_parts_str_len += len(stats_str)
 
         for v_idx in range(1, len(host_data['parsed']) + 1):
-            raw_value = host_data['parsed'][-v_idx]
-
-            if gvars['time_scale'][0] == 'success' or gvars['time_scale'][0] == 'numbered':
-                try:
-                    int_v = int(raw_value)
-                except:
-                    added_value = raw_value.strip()[0:1] # get only the first character
-                    if added_value == '*': # timeout
-                        if gvars['time_scale'][0] == 'success':
-                            added_value = 'X'
-                        if gvars['time_scale'][0] == 'numbered':
-                            added_value = '-'
-                    else:
-                        pass # use the symbol without modifications
-                else:
-                    if gvars['time_scale'][0] == 'success':
-                        if int_v < gvars['cmd_args']['timeout'] * 1000:
-                            added_value = '.'
-                        else:
-                            added_value = 'X'
-                    elif gvars['time_scale'][0] == 'numbered':
-                        if int_v >= gvars['cmd_args']['timeout'] * 1000:
-                            added_value = '-' # timeout
-                        elif int_v < 1000:
-                            added_value = math.floor(int_v / 100)
-                        else:
-                            added_value = '>' # unable to visualize with 0..9
-                    else:
-                        raise ValueError(gvars['time_scale'][0])
-            elif gvars['time_scale'][0] == 'raw':
-                if type(raw_value) is int:
-                    if raw_value >= gvars['cmd_args']['timeout'] * 1000:
-                        added_value = '*' # timeout
-                    else:
-                        added_value = raw_value # normal value
-                else: # non-int, which is an error
-                    added_value = raw_value
-
-                added_value = '{:>4} '.format(added_value)
-            else:
-                raise ValueError(gvars['time_scale'][0])
-
-            added_value = str(added_value)
+            (added_value, value_meta) = _get_display_value(host_data['parsed'][-v_idx])
 
             if len(s) + len(added_value) > t_width - row_parts_str_len:
                 break
