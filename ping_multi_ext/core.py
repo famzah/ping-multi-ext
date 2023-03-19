@@ -168,7 +168,10 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
     host_id_str = ('{:<' + str(gvars['config']['max_host_id_len']) + 's} ').format(
         hostname[0:gvars['config']['max_host_id_len']]
     )
+    row_parts.append(TermCtrl('white')) # we will replace this on error
+    row_parts_host_color_id = len(row_parts) - 1
     row_parts.append(host_id_str)
+    row_parts.append(TermCtrl('white'))
     row_parts_str_len += len(host_id_str)
 
     s = ''
@@ -183,6 +186,9 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
 
         for v_idx in range(1, len(host_data['parsed']) + 1):
             (added_value, value_meta) = _get_display_value(host_data['parsed'][-v_idx])
+
+            if v_idx == 1 and 'error' in value_meta and len(added_value):
+                row_parts[row_parts_host_color_id] = TermCtrl('red')
 
             if len(s) + len(added_value) > t_width - row_parts_str_len:
                 break
