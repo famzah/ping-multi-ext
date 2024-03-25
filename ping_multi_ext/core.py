@@ -619,7 +619,12 @@ def _global_pre_init():
     gvars['stats_show'] = deque([
         'Last', 'Loss%', 'Avg', 'Min', 'Max', 'StDev', 'RX_cnt', 'TX_cnt', 'XX_cnt',
     ])
-
+    
+    if gvars['cmd_args']['dstat']:
+        dstat = gvars['cmd_args']['dstat']
+        dstat_mapping = {'last': 0, 'loss': 8, 'avg': 7, 'min': 6, 'max': 5, 'stdev': 4, 'rx_cnt': 3, 'tx_cnt': 2, 'xx_cnt': 1}
+        gvars['stats_show'].rotate(dstat_mapping[dstat])
+    
     gvars['config'] = {
         'auto_max_host_id_len': True,
         'max_host_id_len': 0,
