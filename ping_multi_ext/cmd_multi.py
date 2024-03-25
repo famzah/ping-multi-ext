@@ -21,6 +21,9 @@ def parse_argv():
     parser.add_argument('--hosts-max-width', type=int, default=dval,
         help=f'maximum width of the hosts column; default={dval}')
 
+    parser.add_argument('-s,--stat', dest='dstat', choices=['last', 'loss', 'avg', 'min', 'max', 'stdev', 'rx_cnt', 'tx_cnt', 'xx_cnt'],
+        help=f'statistic to initially display')
+
     parser.add_argument('host', nargs='*',
         help='host to ping; you can specify this option many times')
 
@@ -57,6 +60,7 @@ def parse_argv():
         'timeout': args['wait'],
         'hosts_max_width': args['hosts_max_width'],
         'ping': ping_args,
+        'dstat': args['dstat']
     }
 
 def main():
