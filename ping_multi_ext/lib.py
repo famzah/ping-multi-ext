@@ -6,11 +6,16 @@ def argv_parser_base(prog_desc):
     parser = argparse.ArgumentParser(
         description=prog_desc
     )
+
     vstr = '{} {} | {}'.format(
         '%(prog)s', ping_multi_ext.version,
         'https://github.com/famzah/ping-multi-ext'
     )
     parser.add_argument('--version', action='version', version=vstr)
+
+    dval = 0
+    parser.add_argument('--hosts-max-width', type=int, default=dval,
+        help=f'maximum width of the hosts column; default={dval}')
 
     return parser
 

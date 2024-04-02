@@ -17,10 +17,6 @@ def parse_argv():
     parser.add_argument('-f,--file', dest='file', metavar='FILE',
         help=f'read list of hosts from file')
 
-    dval = 0
-    parser.add_argument('--hosts-max-width', type=int, default=dval,
-        help=f'maximum width of the hosts column; default={dval}')
-
     parser.add_argument('host', nargs='*',
         help='host to ping; you can specify this option many times')
 

@@ -12,10 +12,6 @@ def parse_argv():
     parser.add_argument('--timeout', type=float, default=dval,
         help=f'ping reply timeout in seconds; default={dval}')
 
-    dval = 0
-    parser.add_argument('--hosts-max-width', type=int, default=dval,
-        help=f'maximum width of the hosts column; default={dval}')
-
     # required
 
     parser.add_argument('--ping', nargs=2, metavar=('UNIQUE_NAME', 'COMMAND'),
