@@ -57,7 +57,8 @@ Upload package to PyPi
 
     git add $DIST_FILES
     git status
-    git commit $DIST_FILES
+    git diff ping_multi_ext/__init__.py
+    git commit $DIST_FILES ping_multi_ext/__init__.py
     git push
 
 Test pip package from PyPi repo
@@ -65,7 +66,6 @@ Test pip package from PyPi repo
 
 .. code-block:: bash
 
-    export PKG_GIT_PATH=xxx/ping-multi-ext
     export REMOTE_HOST=xxx
 
     cd /tmp
