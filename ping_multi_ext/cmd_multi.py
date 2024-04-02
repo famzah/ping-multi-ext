@@ -52,6 +52,7 @@ def parse_argv():
     return {
         'timeout': args['wait'],
         'hosts_max_width': args['hosts_max_width'],
+        'stats_show_initially': args['stats_show_initially'],
         'ping': ping_args,
     }
 

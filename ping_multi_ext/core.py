@@ -8,6 +8,7 @@ import random
 import string
 import math
 import ping_multi_ext.proc
+import ping_multi_ext.lib
 from collections import deque
 import os
 
@@ -616,9 +617,11 @@ def update_hosts_data():
         workflow.update_hosts_data(0.05)
 
 def _global_pre_init():
-    gvars['stats_show'] = deque([
-        'Last', 'Loss%', 'Avg', 'Min', 'Max', 'StDev', 'RX_cnt', 'TX_cnt', 'XX_cnt',
-    ])
+    gvars['stats_show'] = deque(ping_multi_ext.lib.statistics_list())
+
+    gvars['stats_show'].rotate(-1 * ping_multi_ext.lib.statistics_list().index(
+        gvars['cmd_args']['stats_show_initially']
+    ))
 
     gvars['config'] = {
         'auto_max_host_id_len': True,

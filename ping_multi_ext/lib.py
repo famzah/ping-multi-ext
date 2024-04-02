@@ -2,6 +2,9 @@ import argparse
 import shlex
 import ping_multi_ext # version
 
+def statistics_list():
+    return ['Last', 'Loss%', 'Avg', 'Min', 'Max', 'StDev', 'RX_cnt', 'TX_cnt', 'XX_cnt']
+
 def argv_parser_base(prog_desc):
     parser = argparse.ArgumentParser(
         description=prog_desc
@@ -16,6 +19,11 @@ def argv_parser_base(prog_desc):
     dval = 0
     parser.add_argument('--hosts-max-width', type=int, default=dval,
         help=f'maximum width of the hosts column; default={dval}')
+
+    dval = statistics_list()[0]
+    parser.add_argument('-s,--stat', dest='stats_show_initially', choices=statistics_list(),
+        default=dval,
+        help=f'statistic to display initially; default={dval}')
 
     return parser
 
