@@ -43,14 +43,14 @@ Upload package to PyPi
 
     . bin/activate
 
-    pip -qq install --upgrade pip wheel twine
+    pip -qq install --upgrade pip wheel twine setuptools build
 
-    python setup.py sdist >/dev/null
-    python setup.py bdist_wheel >/dev/null
-    rm -r build/ ping_multi_ext.egg-info/
+    python -m build >/dev/null
+    rm -r ping_multi_ext.egg-info/
 
     VER="$(python -c 'import ping_multi_ext; print(ping_multi_ext.version)')"
     DIST_FILES="$(find -name "ping?multi?ext-$VER*")"
+    echo $VER :: $DIST_FILES
 
     twine check $DIST_FILES
     twine upload $DIST_FILES
