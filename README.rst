@@ -76,18 +76,24 @@ The usage help explains the additional command-line options: ::
 
   $ ping-multi -h
   
-  usage: ping-multi [-h] [--version] [-W,--wait SECS] [-i,--interval SECS] [-f,--file FILE] [--hosts-max-width HOSTS_MAX_WIDTH] [host [host ...]]
+  usage: ping-multi [-h] [--version] [--hosts-max-width HOSTS_MAX_WIDTH]
+                    [-s,--stat {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}]
+                    [-W,--wait SECS] [-i,--interval SECS] [-f,--file FILE]
+                    [host ...]
   
   Ping all hosts from FILE and HOSTs.
   
   positional arguments:
     host                  host to ping; you can specify this option many times
   
-  optional arguments:
+  options:
     -h, --help            show this help message and exit
     --version             show program's version number and exit
-    -W,--wait SECS        timeout in seconds to wait for a ping reply; default=1
-    -i,--interval SECS    time in seconds between sending each request; default=1
-    -f,--file FILE        read list of hosts from file
     --hosts-max-width HOSTS_MAX_WIDTH
                           maximum width of the hosts column; default=0
+    -s,--stat {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}
+                          statistic to display initially; default=Last
+    -W,--wait SECS        timeout in seconds to wait for a ping reply; default=1
+    -i,--interval SECS    time in seconds between sending each request;
+                          default=1
+    -f,--file FILE        read list of hosts from file
