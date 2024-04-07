@@ -6,6 +6,9 @@ def parse_argv():
         'Ping all hosts from FILE and HOSTs.'
     )
 
+    parser.add_argument('-f', '--file', dest='file', metavar='FILE',
+        help=f'read list of hosts from file')
+
     dval = 1
     parser.add_argument('-W', '--wait', dest='wait', metavar='SECS', type=float, default=dval,
         help=f'timeout in seconds to wait for a ping reply; default={dval}')
@@ -13,9 +16,6 @@ def parse_argv():
     dval = 1
     parser.add_argument('-i', '--interval', dest='interval', metavar='SECS', type=float, default=dval,
         help=f'time in seconds between sending each request; default={dval}')
-
-    parser.add_argument('-f', '--file', dest='file', metavar='FILE',
-        help=f'read list of hosts from file')
 
     dval = 600
     parser.add_argument('-L', '--count-limit', dest='count_limit', type=int, default=dval,
