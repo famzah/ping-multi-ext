@@ -17,6 +17,9 @@ def parse_argv():
     parser.add_argument('-f', '--file', dest='file', metavar='FILE',
         help=f'read list of hosts from file')
 
+    parser.add_argument('-C', '--cidr-debug', dest='cidr_debug', action='store_true',
+        help=f'debug IPv4 CIDR expansion')
+
     parser.add_argument('host', nargs='*',
         help='host to ping; you can specify this option many times')
 
@@ -38,6 +41,15 @@ def parse_argv():
                     continue
 
                 hosts.append(line)
+
+    hosts_new = []
+    for host in hosts:
+        try:
+            hosts_new += ping_multi_ext.lib.expand_ipv4_network_to_hosts(host, args['cidr_debug'])
+        except ping_multi_ext.lib.CidrDebugError as ex:
+            parser.error('argument "{}": {}'.format(host, str(ex)))
+    hosts = hosts_new
+    del hosts_new
 
     if not len(hosts):
         parser.error('No hosts were specified')

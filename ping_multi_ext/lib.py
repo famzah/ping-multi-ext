@@ -1,6 +1,8 @@
 import argparse
 import shlex
 import ping_multi_ext # version
+import ipaddress
+import re
 
 def statistics_list():
     return ['Last', 'Loss%', 'Avg', 'Min', 'Max', 'StDev', 'RX_cnt', 'TX_cnt', 'XX_cnt']
@@ -51,3 +53,22 @@ def compose_ping_cmd(host, cmd_args):
         )
     else:
         return ping_cmd
+
+class CidrDebugError(Exception):
+    pass
+
+# if no IPv4 CIDR network is recognized, the original "host_input" is returned in a single list
+def expand_ipv4_network_to_hosts(host_input, debug):
+    is_cidr = re.search(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d+', host_input)
+    if not is_cidr:
+        return [host_input]
+
+    try:
+        net = ipaddress.IPv4Network(host_input)
+    except Exception as ex:
+        if debug:
+            raise CidrDebugError(str(ex))
+        else:
+            return [host_input]
+
+    return [ str(ip_address) for ip_address in net.hosts() ]
