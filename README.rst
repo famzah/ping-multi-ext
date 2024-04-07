@@ -72,13 +72,16 @@ Ping multiple hosts specified in a file; you can also add more single hosts dire
 
   ping-multi -f sample.list
   
+IPv4 CIDR masks are supported: ::
+
+  ping-multi 192.168.0.0/30
+
 The usage help explains the additional command-line options: ::
 
   $ ping-multi -h
   
-  usage: ping-multi [-h] [--version] [--hosts-max-width HOSTS_MAX_WIDTH]
-                    [-s,--stat {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}]
-                    [-W,--wait SECS] [-i,--interval SECS] [-f,--file FILE]
+  usage: ping-multi [-h] [--version] [--hosts-max-width HOSTS_MAX_WIDTH] [-s {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}] [-f FILE]
+                    [-W SECS] [-i SECS] [-L COUNT_LIMIT] [-C]
                     [host ...]
   
   Ping all hosts from FILE and HOSTs.
@@ -91,9 +94,12 @@ The usage help explains the additional command-line options: ::
     --version             show program's version number and exit
     --hosts-max-width HOSTS_MAX_WIDTH
                           maximum width of the hosts column; default=0
-    -s,--stat {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}
+    -s {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}, --stat {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}
                           statistic to display initially; default=Last
-    -W,--wait SECS        timeout in seconds to wait for a ping reply; default=1
-    -i,--interval SECS    time in seconds between sending each request;
-                          default=1
-    -f,--file FILE        read list of hosts from file
+    -f FILE, --file FILE  read list of hosts from file
+    -W SECS, --wait SECS  timeout in seconds to wait for a ping reply; default=1
+    -i SECS, --interval SECS
+                          time in seconds between sending each request; default=1
+    -L COUNT_LIMIT, --count-limit COUNT_LIMIT
+                          limit the number of hosts; avoids unintended bulk actions; default=600
+    -C, --cidr-debug      debug IPv4 CIDR expansion
