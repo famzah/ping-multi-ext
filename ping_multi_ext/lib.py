@@ -21,7 +21,7 @@ def argv_parser_base(prog_desc):
         help=f'maximum width of the hosts column; default={dval}')
 
     dval = statistics_list()[0]
-    parser.add_argument('-s,--stat', dest='stats_show_initially', choices=statistics_list(),
+    parser.add_argument('-s', '--stat', dest='stats_show_initially', choices=statistics_list(),
         default=dval,
         help=f'statistic to display initially; default={dval}')
 
