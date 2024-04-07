@@ -17,6 +17,10 @@ def parse_argv():
     parser.add_argument('-f', '--file', dest='file', metavar='FILE',
         help=f'read list of hosts from file')
 
+    dval = 600
+    parser.add_argument('-L', '--count-limit', dest='count_limit', type=int, default=dval,
+        help=f'limit the number of hosts; avoids unintended bulk actions; default={dval}')
+
     parser.add_argument('-C', '--cidr-debug', dest='cidr_debug', action='store_true',
         help=f'debug IPv4 CIDR expansion')
 
@@ -53,6 +57,11 @@ def parse_argv():
 
     if not len(hosts):
         parser.error('No hosts were specified')
+
+    if len(hosts) > args['count_limit']:
+        parser.error('Too many hosts specified ({}). You can increase the limit with -L/--count-limit.'.format(
+            len(hosts)
+        ))
 
     ping_args = []
     for host in hosts:
