@@ -64,7 +64,7 @@ def expand_ipv4_network_to_hosts(host_input, debug):
         return [host_input]
 
     try:
-        net = ipaddress.IPv4Network(host_input)
+        net = ipaddress.IPv4Network(host_input, strict=False)
     except Exception as ex:
         if debug:
             raise CidrDebugError(str(ex))
