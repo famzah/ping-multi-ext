@@ -1,6 +1,28 @@
 import ping_multi_ext.lib
 import ping_multi_ext.core
 
+def expand_hosts_cidr(hosts, args, parser):
+    hosts_new = []
+
+    for host in hosts:
+        try:
+            hosts_new += ping_multi_ext.lib.expand_ipv4_network_to_hosts(
+                host, args['cidr_debug'], args['count_limit']
+            )
+        except ping_multi_ext.lib.CidrDebugError as ex:
+            parser.error('argument "{}": {}'.format(host, str(ex)))
+        except ping_multi_ext.lib.NetworkTooBigError as ex:
+            parser.error('CIDR {} is too big ({}). You can increase the limit with -L/--count-limit.'.format(
+                host, ex.num_addresses
+            ))
+
+        if len(hosts_new) > args['count_limit']:
+            parser.error('Too many hosts specified ({}). You can increase the limit with -L/--count-limit.'.format(
+                len(hosts_new)
+            ))
+
+    return hosts_new
+
 def parse_argv():
     parser = ping_multi_ext.lib.argv_parser_base(
         'Ping all hosts from FILE and HOSTs.'
@@ -46,22 +68,10 @@ def parse_argv():
 
                 hosts.append(line)
 
-    hosts_new = []
-    for host in hosts:
-        try:
-            hosts_new += ping_multi_ext.lib.expand_ipv4_network_to_hosts(host, args['cidr_debug'])
-        except ping_multi_ext.lib.CidrDebugError as ex:
-            parser.error('argument "{}": {}'.format(host, str(ex)))
-    hosts = hosts_new
-    del hosts_new
+    hosts = expand_hosts_cidr(hosts, args, parser)
 
     if not len(hosts):
         parser.error('No hosts were specified')
-
-    if len(hosts) > args['count_limit']:
-        parser.error('Too many hosts specified ({}). You can increase the limit with -L/--count-limit.'.format(
-            len(hosts)
-        ))
 
     ping_args = []
     for host in hosts:

@@ -57,8 +57,13 @@ def compose_ping_cmd(host, cmd_args):
 class CidrDebugError(Exception):
     pass
 
+class NetworkTooBigError(Exception):
+    def __init__(self, message, num_addresses):
+        super().__init__(message)
+        self.num_addresses = num_addresses
+
 # if no IPv4 CIDR network is recognized, the original "host_input" is returned in a single list
-def expand_ipv4_network_to_hosts(host_input, debug):
+def expand_ipv4_network_to_hosts(host_input, debug, count_limit):
     is_cidr = re.search(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d+', host_input)
     if not is_cidr:
         return [host_input]
@@ -70,5 +75,8 @@ def expand_ipv4_network_to_hosts(host_input, debug):
             raise CidrDebugError(str(ex))
         else:
             return [host_input]
+
+    if net.num_addresses > count_limit:
+        raise NetworkTooBigError("Expanded network is too big", net.num_addresses)
 
     return [ str(ip_address) for ip_address in net.hosts() ]
