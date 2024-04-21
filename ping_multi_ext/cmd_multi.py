@@ -7,7 +7,7 @@ def expand_hosts_cidr(hosts, args, parser):
     for host in hosts:
         try:
             hosts_new += ping_multi_ext.lib.expand_ipv4_network_to_hosts(
-                host, args['cidr_debug'], args['count_limit']
+                host, True, args['count_limit']
             )
         except ping_multi_ext.lib.CidrDebugError as ex:
             parser.error('argument "{}": {}'.format(host, str(ex)))
@@ -42,9 +42,6 @@ def parse_argv():
     dval = 600
     parser.add_argument('-L', '--count-limit', dest='count_limit', type=int, default=dval,
         help=f'limit the number of hosts; avoids unintended bulk actions; default={dval}')
-
-    parser.add_argument('-C', '--cidr-debug', dest='cidr_debug', action='store_true',
-        help=f'debug IPv4 CIDR expansion')
 
     parser.add_argument('host', nargs='*',
         help='host to ping; you can specify this option many times')
