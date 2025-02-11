@@ -43,6 +43,9 @@ def parse_argv():
     parser.add_argument('-L', '--count-limit', dest='count_limit', type=int, default=dval,
         help=f'limit the number of hosts; avoids unintended bulk actions; default={dval}')
 
+    parser.add_argument('-C', '--comments-as-sep', action='store_true',
+        help=f'display comments from the hosts file as separators')
+
     parser.add_argument('host', nargs='*',
         help='host to ping; you can specify this option many times')
 
@@ -60,8 +63,12 @@ def parse_argv():
             for line in f:
                 line = line.strip()
 
-                if not len(line) or line.startswith('#'):
+                if not len(line):
                     continue
+
+                if line.startswith('#'):
+                    if not args['comments_as_sep']:
+                        continue
 
                 hosts.append(line)
 

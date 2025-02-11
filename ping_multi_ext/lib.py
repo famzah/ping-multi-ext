@@ -38,6 +38,9 @@ def remove_ssh_user(host):
     return '@'.join(parts)
 
 def compose_ping_cmd(host, cmd_args):
+    if host.startswith('#'): # 'comments_as_sep' in effect
+        return 'true' # '/bin/true' simply exits immediately with no output
+
     parts = host.split('@', 1)
 
     ping_cmd = 'ping -O -W {} -i {} {}'.format(

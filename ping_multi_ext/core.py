@@ -181,6 +181,9 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
         if stats_val is None:
             stats_val = ''
 
+        if hostname.startswith('#'): # 'comments_as_sep' in effect
+            stats_val = ''
+
         stats_str = ('{:>6}  '.format(stats_val))
         row_parts.append(stats_str)
         row_parts_str_len += len(stats_str)
@@ -190,6 +193,10 @@ def _compose_host_data_parsed_str(hostname, host_data, t_width, selected):
 
             if v_idx == 1 and 'error' in value_meta and len(added_value):
                 row_parts[row_parts_host_color_id] = TermCtrl('red')
+
+            if hostname.startswith('#'): # 'comments_as_sep' in effect
+                row_parts[row_parts_host_color_id] = TermCtrl('cyan')
+                added_value = ''
 
             if len(s) + len(added_value) > t_width - row_parts_str_len:
                 break
@@ -470,6 +477,8 @@ def ui_renderer(all_hosts):
                                 TermCtrl('bold'), TermCtrl('red'),
                                 'You need to select a row with the up and down arrows first',
                             ]
+                        elif sel_hostname.startswith('#'): # 'comment_as_sep' in effect
+                            pass
                         else:
                             host_data_type = 'raw'
 
