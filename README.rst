@@ -79,16 +79,15 @@ IPv4 CIDR masks are supported: ::
 The usage help explains the additional command-line options: ::
 
   $ ping-multi -h
-  
-  usage: ping-multi [-h] [--version] [--hosts-max-width HOSTS_MAX_WIDTH] [-s {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}] [-f FILE]
-                    [-W SECS] [-i SECS] [-L COUNT_LIMIT] [-C]
-                    [host ...]
-  
+
+  usage: ping-multi [-h] [--version] [--hosts-max-width HOSTS_MAX_WIDTH] [-s {Last,Loss%,Avg,Min,Max,StDev,RX_cnt,TX_cnt,XX_cnt}] [-f FILE] [-W SECS] [-i SECS] [-L COUNT_LIMIT] [-C]
+                  [host ...]
+
   Ping all hosts from FILE and HOSTs.
-  
+
   positional arguments:
     host                  host to ping; you can specify this option many times
-  
+
   options:
     -h, --help            show this help message and exit
     --version             show program's version number and exit
@@ -102,4 +101,5 @@ The usage help explains the additional command-line options: ::
                           time in seconds between sending each request; default=1
     -L COUNT_LIMIT, --count-limit COUNT_LIMIT
                           limit the number of hosts; avoids unintended bulk actions; default=600
-    -C, --cidr-debug      debug IPv4 CIDR expansion
+    -C, --comments-as-sep
+                          display comments from the hosts file as separators. Ignore comments begining with double #
