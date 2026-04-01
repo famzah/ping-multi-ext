@@ -102,4 +102,4 @@ The usage help explains the additional command-line options: ::
     -L COUNT_LIMIT, --count-limit COUNT_LIMIT
                           limit the number of hosts; avoids unintended bulk actions; default=600
     -C, --comments-as-sep
-                          display comments from the hosts file as separators. Ignore comments begining with double #
+                          display comments from the hosts file as separators. Ignore comments starting with ##
