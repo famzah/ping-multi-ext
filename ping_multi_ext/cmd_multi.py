@@ -23,6 +23,21 @@ def expand_hosts_cidr(hosts, args, parser):
 
     return hosts_new
 
+def _parse_host_token(host, comments_as_sep):
+    host = host.strip()
+
+    if not len(host):
+        return None
+
+    if host.startswith('#'):
+        if not comments_as_sep:
+            return None
+
+        if host.startswith('##'):
+            return None
+
+    return host
+
 def parse_argv():
     parser = ping_multi_ext.lib.argv_parser_base(
         'Ping all hosts from FILE and HOSTs.'
@@ -44,7 +59,7 @@ def parse_argv():
         help=f'limit the number of hosts; avoids unintended bulk actions; default={dval}')
 
     parser.add_argument('-C', '--comments-as-sep', action='store_true',
-        help=f'display comments from the hosts file as separators. Ignore comments starting with ##')
+        help=f'display comments as separators. Ignore comments starting with ##')
 
     parser.add_argument('host', nargs='*',
         help='host to ping; you can specify this option many times')
@@ -56,21 +71,23 @@ def parse_argv():
             args['wait'], args['interval']
         ))
 
-    hosts = args['host'].copy()
+    hosts = []
+
+    for host in args['host']:
+        host = _parse_host_token(host, args['comments_as_sep'])
+        if host is None:
+            continue
+
+        hosts.append(host)
 
     if args['file'] is not None:
         with open(args['file']) as f:
             for line in f:
-                line = line.strip()
-
-                if not len(line):
+                host = _parse_host_token(line, args['comments_as_sep'])
+                if host is None:
                     continue
 
-                if line.startswith('#'):
-                    if not args['comments_as_sep'] or line.startswith('##'):
-                        continue
-
-                hosts.append(line)
+                hosts.append(host)
 
     hosts = expand_hosts_cidr(hosts, args, parser)
 
