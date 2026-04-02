@@ -51,7 +51,7 @@ Installation
 
 ::
 
-  pip3 install ping-multi-ext
+  pip install ping-multi-ext
 
 The executable "ping-multi" is automatically added to your "~/.local/bin" directory which you should add to your "$PATH" environment, so that you can easily execute "ping-multi".
 
