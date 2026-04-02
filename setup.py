@@ -17,6 +17,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/x-rst',
     url='https://github.com/famzah/ping-multi-ext',
+    license='MIT',
 
     author='Ivan Zahariev (famzah)',
     #author_email='author@example.com',  # Optional
@@ -26,7 +27,6 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: System Administrators',
-        'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3 :: Only',

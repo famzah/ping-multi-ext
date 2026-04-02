@@ -1,7 +1,7 @@
 Documentation
 *************
 
-https://packaging.python.org/guides/distributing-packages-using-setuptools/
+https://packaging.python.org/en/latest/flow/
 
 Update version
 **************
@@ -43,7 +43,7 @@ Upload package to PyPi
 
     . bin/activate
 
-    pip -qq install --upgrade pip wheel twine setuptools build
+    pip -qq install --upgrade pip wheel setuptools build "packaging>=24.2" "twine>=6.1"
 
     python -m build >/dev/null
     rm -r ping_multi_ext.egg-info/
@@ -52,7 +52,7 @@ Upload package to PyPi
     DIST_FILES="$(find -name "ping?multi?ext-$VER*")"
     echo $VER :: $DIST_FILES
 
-    twine check $DIST_FILES
+    twine check --strict $DIST_FILES
     twine upload $DIST_FILES
 
     git add $DIST_FILES
