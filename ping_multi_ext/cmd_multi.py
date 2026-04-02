@@ -1,3 +1,4 @@
+import itertools
 import ping_multi_ext.lib
 import ping_multi_ext.core
 
@@ -38,6 +39,16 @@ def _parse_host_token(host, comments_as_sep):
 
     return host
 
+# Combine command-line hosts and file lines into one candidate stream
+def _iter_host_candidates(args):
+    hosts = iter(args['host'])
+    if args['file'] is None:
+        yield from hosts
+    else:
+        with open(args['file']) as f:
+            hosts = itertools.chain(hosts, f)
+            yield from hosts
+
 def parse_argv():
     parser = ping_multi_ext.lib.argv_parser_base(
         'Ping all hosts from FILE and HOSTs.'
@@ -72,22 +83,12 @@ def parse_argv():
         ))
 
     hosts = []
-
-    for host in args['host']:
+    for host in _iter_host_candidates(args):
         host = _parse_host_token(host, args['comments_as_sep'])
         if host is None:
             continue
 
         hosts.append(host)
-
-    if args['file'] is not None:
-        with open(args['file']) as f:
-            for line in f:
-                host = _parse_host_token(line, args['comments_as_sep'])
-                if host is None:
-                    continue
-
-                hosts.append(host)
 
     hosts = expand_hosts_cidr(hosts, args, parser)
 
