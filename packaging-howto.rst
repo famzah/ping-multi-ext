@@ -41,7 +41,9 @@ Upload package to PyPi
 
 .. code-block:: bash
 
-    . bin/activate
+    rm -rf .venv
+    python3 -m venv .venv
+    . .venv/bin/activate
 
     pip -qq install --upgrade pip wheel setuptools build "packaging>=24.2" "twine>=6.1"
 
