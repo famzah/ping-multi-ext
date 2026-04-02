@@ -33,7 +33,7 @@ Test pip package locally
     which ping-multi | grep -q "$(pwd)/bin/" || echo ERROR
     which ping-raw-multi | grep -q "$(pwd)/bin/" || echo ERROR
 
-    ping-multi google.com "google.com@$REMOTE_HOST" "2620:12e:1000::a00:f@$REMOTE_HOST"
+    ping-multi -C '# IPv4 local' google.com yahoo.com '#' '#' '# IPv4 remote' '## skip comment' "google.com@$REMOTE_HOST" '# IPv6 remote' "2620:12e:1000::a00:f@$REMOTE_HOST"
     ping-raw-multi --ping google.com@local 'ping google.com' --ping google.com@remote "ssh root@$REMOTE_HOST ping google.com" --ping direct_ipv6@remote "ssh root@$REMOTE_HOST ping 2620:12e:1000::a00:f"
 
 Upload package to PyPi
@@ -84,5 +84,5 @@ Test pip package from PyPi repo
     which ping-multi | grep -q "$(pwd)/bin/" || echo ERROR
     which ping-raw-multi | grep -q "$(pwd)/bin/" || echo ERROR
 
-    ping-multi google.com "google.com@$REMOTE_HOST" "2620:12e:1000::a00:f@$REMOTE_HOST"
+    ping-multi -C '# IPv4 local' google.com yahoo.com '#' '#' '# IPv4 remote' '## skip comment' "google.com@$REMOTE_HOST" '# IPv6 remote' "2620:12e:1000::a00:f@$REMOTE_HOST"
     ping-raw-multi --ping google.com@local 'ping google.com' --ping google.com@remote "ssh root@$REMOTE_HOST ping google.com" --ping direct_ipv6@remote "ssh root@$REMOTE_HOST ping 2620:12e:1000::a00:f"
