@@ -580,8 +580,9 @@ def populate_hosts():
     ret = {}
     for hostname, cmd in gvars['cmd_args']['ping']:
         if hostname in ret:
-            print(f'Error: Duplicate unique name: {hostname}', file=sys.stderr, flush=True)
-            sys.exit(1)
+            if not (hostname.startswith('#') and cmd == 'true'): # we use "true" for comments fake host entries
+                print(f'Error: Duplicate unique name: {hostname}', file=sys.stderr, flush=True)
+                sys.exit(1)
 
         ret[hostname] = {
             'proc': {
